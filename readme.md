@@ -1,6 +1,6 @@
-# <img src="extension/icon.png" width="45" align="left"> Refined GitHub
+# <img src="refined-github.safariextension/icon.png" width="45" align="left"> Refined GitHub
 
-> Chrome extension that simplifies the GitHub interface and adds useful features
+> Safari extension that simplifies the GitHub interface and adds useful features
 
 We use GitHub a lot and notice many dumb annoyances we'd like to fix. So here be dragons.
 
