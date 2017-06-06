@@ -74,11 +74,11 @@ function cacheReleasesCount() {
 	if (pageDetect.isRepoRoot()) {
 		const releasesCount = $('.numbers-summary a[href$="/releases"] .num').text().trim();
 		appendReleasesCount(releasesCount);
-		chrome.storage.local.set({[releasesCountCacheKey]: releasesCount});
+		localStorage.setItem([releasesCountCacheKey], JSON.stringify(releasesCount));
 	} else {
-		chrome.storage.local.get(releasesCountCacheKey, items => {
-			appendReleasesCount(items[releasesCountCacheKey]);
-		});
+		try {
+			appendReleasesCount(JSON.parse(localStorage.getItem(releasesCountCacheKey)))
+		} catch (e) {}
 	}
 }
 

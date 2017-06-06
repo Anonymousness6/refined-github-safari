@@ -1,9 +1,7 @@
 {
   "scripts": {
     "test": "xo && ava && npm run build",
-    "build:c": "rollup -c node:webext -i src/content.js -o extension/content.js",
-    "build:b": "rollup -c node:webext -i src/background.js -o extension/background.js",
-    "build:o": "rollup -c node:webext -i src/options/index.js -o extension/options/index.js",
+    "build:c": "rollup -c node:webext -i src/content.js -o refined-github.safariextension/content.js",
     "build": "run-p build:*",
     "watch": "run-p --continue-on-error --silent 'build:* -- --watch'",
     "release": "webstore upload --source=extension --auto-publish"
@@ -14,8 +12,7 @@
     "element-ready": "^2.0.0",
     "escape-goat": "^1.1.0",
     "github-injection": "^0.3.0",
-    "to-semver": "^1.1.0",
-    "webext-dynamic-content-scripts": "^2.0.1"
+    "to-semver": "^1.1.0"
   },
   "devDependencies": {
     "ava": "*",
@@ -37,7 +34,7 @@
       "import/no-unassigned-import": 0
     },
     "ignores": [
-      "extension/**"
+      "refined-github.safariextension/**"
     ]
   },
   "ava": {
@@ -45,7 +42,7 @@
       "test/*.js"
     ],
     "source": [
-      "extension/*.js"
+      "refined-github.safariextension/*.js"
     ],
     "require": [
       "babel-register"
