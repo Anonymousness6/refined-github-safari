@@ -1,10 +1,11 @@
+import {escape as escapeHtml} from 'escape-goat';
 import {exists, issueRegex, linkifyIssueRef} from './util';
 
 const URLRegex = /(http(s)?(:\/\/))(www\.)?[a-zA-Z0-9-_.]+(\.[a-zA-Z0-9]{2,})([-a-zA-Z0-9:%_+.~#?&//=]*)/g;
 const linkifiedURLClass = 'rg-linkified-code';
 const commonURLAttrs = `target="_blank" class="${linkifiedURLClass}"`;
 
-const linkifyURL = url => `<a href="${url}" ${commonURLAttrs}>${url}</a>`;
+const linkifyURL = url => `<a href="${escapeHtml(url)}" ${commonURLAttrs}>${escapeHtml(url)}</a>`;
 
 export const hasIssue = text => issueRegex.test(text);
 export const findURLs = text => text.match(URLRegex) || [];
