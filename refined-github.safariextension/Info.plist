@@ -7,7 +7,7 @@
 	<key>Builder Version</key>
 	<string>12604.1.23.0.2</string>
 	<key>CFBundleDisplayName</key>
-	<string>Refined Github</string>
+	<string>Refined For Github</string>
 	<key>CFBundleIdentifier</key>
 	<string>me.dutour.mathieu.refined-github</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -56,6 +56,8 @@
 			<string>Some</string>
 		</dict>
 	</dict>
+	<key>Update Manifest URL</key>
+	<string>https://github.com/mathieudutour/refined-github/raw/master/update-manifest.plist</string>
 	<key>Website</key>
 	<string>https://github.com/mathieudutour/refined-github-safari</string>
 </dict>
