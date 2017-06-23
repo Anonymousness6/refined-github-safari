@@ -1,7 +1,11 @@
+import 'webext-dynamic-content-scripts';
+import OptionsSync from 'webext-options-sync';
 import elementReady from 'element-ready';
 import gitHubInjection from 'github-injection';
 import toSemver from 'to-semver';
-import {escape as escapeHtml} from 'escape-goat';
+import linkifyIssues from 'linkify-issues';
+import select from 'select-dom';
+import domLoaded from 'dom-loaded';
 import $ from './libs/vendor/jquery.slim.min';
 
 import markUnread from './libs/mark-unread';
@@ -13,13 +17,15 @@ import addReactionParticipants from './libs/reactions-avatars';
 import showRealNames from './libs/show-names';
 import filePathCopyBtnListner from './libs/copy-file-path';
 import addFileCopyButton from './libs/copy-file';
-import {linkifyCode} from './libs/linkify-urls-in-code';
-import {select, exists, issueRegex, linkifyIssueRef} from './libs/util';
+import copyMarkdown from './libs/copy-markdown';
+import linkifyCode, {editTextNodes} from './libs/linkify-urls-in-code';
+import shortenLinks from './libs/shorten-links';
+import autoLoadMoreNews from './libs/auto-load-more-news';
 import * as icons from './libs/icons';
 import * as pageDetect from './libs/page-detect';
 
-const {ownerName, repoName} = pageDetect.getOwnerAndRepo();
-const repoUrl = `${ownerName}/${repoName}`;
+const repoUrl = pageDetect.getRepoURL();
+
 const getUsername = () => select('meta[name="user-login"]').getAttribute('content');
 
 function getCanonicalBranchFromRef($element) {
@@ -27,12 +33,6 @@ function getCanonicalBranchFromRef($element) {
 
 	return $element.find(refSelector).addBack(refSelector).filter('[title]').attr('title');
 }
-
-function getSettingsTab() {
-	return $('.js-repo-nav > [data-selected-links~="repo_settings"]');
-}
-
-const hasSettings = () => getSettingsTab().length > 0;
 
 function linkifyBranchRefs() {
 	let deletedBranchName = null;
@@ -82,26 +82,23 @@ function cacheReleasesCount() {
 	}
 }
 
-function addCompareTab() {
-	const $repoNav = $('.js-repo-nav');
-
-	if ($repoNav.find('.refined-github-compare-tab').length > 0) {
+function addCompareLink() {
+	if (select.exists('.refined-github-compare-tab')) {
 		return;
 	}
-	const $compareTab = $(`<a href="/${repoUrl}/compare" class="reponav-item refined-github-compare-tab">
-		${icons.compare}
-		<span>Compare</span>
-	</a>`);
 
-	if (pageDetect.isCompare()) {
-		$repoNav.find('.selected').removeClass('js-selected-navigation-item selected');
-		$compareTab.addClass('js-selected-navigation-item selected');
-	}
+	$('.reponav-dropdown .dropdown-menu').prepend(`
+		<a href="/${repoUrl}/compare" class="dropdown-item refined-github-compare-tab">
+			${icons.darkCompare}
+			<span itemprop="name">Compare</span>
+		</a>
+	`);
+}
 
-	if (hasSettings()) {
-		getSettingsTab().before($compareTab);
-	} else {
-		$repoNav.append($compareTab);
+function renameInsightsDropdown() {
+	const dropdown = select('.reponav-item.reponav-dropdown');
+	if (dropdown) {
+		dropdown.firstChild.textContent = 'More ';
 	}
 }
 
@@ -125,11 +122,7 @@ function addReleasesTab() {
 	}
 
 	if (!hasReleases) {
-		if (hasSettings()) {
-			getSettingsTab().before($releasesTab);
-		} else {
-			$repoNav.append($releasesTab);
-		}
+		$releasesTab.insertBefore(select('.reponav-dropdown, [data-selected-links~="repo_settings"]'));
 
 		cacheReleasesCount();
 	}
@@ -163,27 +156,8 @@ function addYoursMenuItem() {
 	$menu.append(yoursMenuItem);
 }
 
-function infinitelyMore() {
-	const btn = select('.ajax-pagination-btn');
-
-	// If there's no more button remove unnecessary event listeners
-	if (!btn) {
-		$(window).off('scroll.infinite resize.infinite', infinitelyMore);
-		return;
-	}
-
-	// Grab dimensions to see if we should load
-	const wHeight = window.innerHeight;
-	const btnOffset = btn.getBoundingClientRect().top;
-
-	// Smash the button if it's coming close to being in view
-	if (wHeight > btnOffset) {
-		btn.click();
-	}
-}
-
 function addReadmeButtons() {
-	const readmeContainer = select('#readme');
+	const readmeContainer = select('#readme.readme');
 	if (!readmeContainer) {
 		return;
 	}
@@ -244,19 +218,11 @@ function addDeleteForkLink() {
 }
 
 function linkifyIssuesInTitles() {
-	const title = select('.js-issue-title');
-	const titleText = escapeHtml(title.textContent);
-
-	if (issueRegex.test(titleText)) {
-		title.innerHTML = titleText.replace(
-			new RegExp(issueRegex.source, 'g'),
-			match => linkifyIssueRef(repoUrl, match, '')
-		);
-	}
+	editTextNodes(linkifyIssues, select('.js-issue-title'));
 }
 
 function addPatchDiffLinks() {
-	if (exists('.sha-block.patch-diff-links')) {
+	if (select.exists('.sha-block.patch-diff-links')) {
 		return;
 	}
 
@@ -277,12 +243,11 @@ function addPatchDiffLinks() {
 }
 
 function removeDiffSigns() {
-	$('.blob-code-addition, .blob-code-deletion')
-		.find('.blob-code-inner:not(.refined-github-diff-signs)')
-		.each((index, element) => {
-			const $element = $(element);
-			$element.html(` ${$element.html().slice(1)}`);
-			$element.addClass('refined-github-diff-signs');
+	$('.diff-table:not(.refined-github-diff-signs)')
+		.addClass('refined-github-diff-signs')
+		.find('.blob-code-inner')
+		.each((index, el) => {
+			el.firstChild.textContent = el.firstChild.textContent.slice(1);
 		});
 }
 
@@ -314,7 +279,7 @@ function indentInput(el, size = 4) {
 
 function showRecentlyPushedBranches() {
 	// Don't duplicate on back/forward in history
-	if (exists('.recently-touched-branches-wrapper')) {
+	if (select.exists('.recently-touched-branches-wrapper')) {
 		return;
 	}
 
@@ -446,7 +411,7 @@ function addFilterCommentsByYou() {
 
 function addProjectNewLink() {
 	const projectNewLink = `<a href="/${repoUrl}/projects/new" class="btn btn-sm" id="refined-github-project-new-link">Add a project</a>`;
-	if (exists('#projects-feature:checked') && !exists('#refined-github-project-new-link')) {
+	if (select.exists('#projects-feature:checked') && !select.exists('#refined-github-project-new-link')) {
 		$(`#projects-feature ~ p.note`).after(projectNewLink);
 	}
 }
@@ -509,7 +474,9 @@ $(document).on('pjax:end', () => {
 	}
 });
 
-function init() {
+$(document).on('copy', '.markdown-body', copyMarkdown);
+
+function init(options) {
 	const username = getUsername();
 
 	markUnread.unreadIndicatorIcon();
@@ -526,12 +493,13 @@ function init() {
 				.css('display', 'none');
 		};
 
-		hideStarsOwnRepos();
+		if (options.hideStarsOwnRepos) {
+			hideStarsOwnRepos();
+			new MutationObserver(() => hideStarsOwnRepos())
+				.observe(select('#dashboard .news'), {childList: true});
+		}
 
-		new MutationObserver(() => hideStarsOwnRepos())
-			.observe(select('#dashboard .news'), {childList: true});
-
-		$(window).on('scroll.infinite resize.infinite', infinitelyMore);
+		autoLoadMoreNews();
 	}
 
 	if (pageDetect.isNotifications()) {
@@ -556,9 +524,12 @@ function init() {
 	if (pageDetect.isRepo()) {
 		gitHubInjection(window, () => {
 			addReleasesTab();
-			addCompareTab();
 			removeProjectsTab();
+			addCompareLink();
+			renameInsightsDropdown();
 			addTitleToEmojis();
+			shortenLinks();
+			addReadmeButtons();
 
 			diffFileHeader.destroy();
 			enableCopyOnY.destroy();
@@ -572,10 +543,11 @@ function init() {
 
 			if (pageDetect.isPR() || pageDetect.isIssue()) {
 				linkifyIssuesInTitles();
-			}
 
-			if (pageDetect.isRepoRoot() || pageDetect.isRepoTree()) {
-				addReadmeButtons();
+				markUnread.setup();
+
+				addOPLabels();
+				new MutationObserver(addOPLabels).observe(select('.new-discussion-timeline'), {childList: true, subtree: true});
 			}
 
 			if (pageDetect.isPRList() || pageDetect.isIssueList()) {
@@ -593,16 +565,13 @@ function init() {
 				if (diffElements) {
 					new MutationObserver(removeDiffSigns).observe(diffElements, {childList: true, subtree: true});
 				}
+				addDiffViewWithoutWhitespaceOption();
 			}
 
 			if (pageDetect.isPR() || pageDetect.isIssue() || pageDetect.isCommit()) {
 				addReactionParticipants.add(username);
 				addReactionParticipants.addListener(username);
 				showRealNames();
-			}
-
-			if (pageDetect.hasDiff()) {
-				addDiffViewWithoutWhitespaceOption();
 			}
 
 			if (pageDetect.isCommitList()) {
@@ -619,22 +588,12 @@ function init() {
 				enableCopyOnY.setup();
 			}
 
-			if (pageDetect.isPR() || pageDetect.isIssue()) {
-				markUnread.setup();
-			}
-
-			if (pageDetect.isIssue() || pageDetect.isPR()) {
-				addOPLabels();
-
-				new MutationObserver(addOPLabels).observe(select('.new-discussion-timeline'), {childList: true, subtree: true});
-			}
-
 			if (pageDetect.isMilestone()) {
 				addMilestoneNavigation();
 			}
 
 			if (pageDetect.hasCode()) {
-				linkifyCode(repoUrl);
+				linkifyCode();
 			}
 
 			if (pageDetect.isRepoSettings()) {
@@ -648,8 +607,5 @@ if (!pageDetect.isGist()) {
 	addTrendingMenuItem();
 }
 
-if (document.readyState === 'complete') {
-	init();
-} else {
-	document.addEventListener('DOMContentLoaded', init);
-}
+const options = new OptionsSync().getAll();
+domLoaded.then(() => options).then(init);

@@ -1,31 +1,43 @@
 {
+  "name": "refined-github",
+  "description": "Simplifies the GitHub interface and adds useful features",
+  "private": true,
   "scripts": {
     "test": "xo && ava && npm run build",
-    "build:c": "rollup -c node:webext -i src/content.js -o refined-github.safariextension/content.js",
-    "build": "run-p build:*",
-    "watch": "run-p --continue-on-error --silent 'build:* -- --watch'",
-    "release": "webstore upload --source=extension --auto-publish"
+    "build": "rollup -c node:webext -i src/content.js -o refined-github.safariextension/content.js",
+    "watch": "run-p --continue-on-error --silent \"build -- --watch\"",
+    "watch:sourcemap": "cross-env SOURCEMAP=true npm run watch --silent",
+    "release:amo": "cd extension && webext submit",
+    "release:cws": "cd extension && webstore upload --auto-publish",
+    "release": "run-s release:*"
   },
   "dependencies": {
-    "copy-text-to-clipboard": "^1.0.0",
+    "copy-text-to-clipboard": "^1.0.2",
     "debounce-fn": "^1.0.0",
+    "dom-loaded": "^1.0.0",
     "element-ready": "^2.0.0",
-    "escape-goat": "^1.1.0",
     "github-injection": "^0.3.0",
+    "linkify-issues": "^1.1.0",
+    "linkify-urls": "^1.0.2",
+    "select-dom": "^4.1.0",
+    "to-markdown": "^3.0.4",
     "to-semver": "^1.1.0"
   },
   "devDependencies": {
     "ava": "*",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
     "chrome-webstore-upload-cli": "^1.0.0",
+    "cross-env": "^5.0.1",
     "npm-run-all": "^4.0.2",
-    "rollup": "^0.41.6",
-    "rollup-config-webext": "^1.1.0",
-    "rollup-watch": "^3.2.2",
+    "rollup": "^0.43.0",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-json": "^2.3.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-watch": "^4.0.0",
+    "webext": "^1.9.1-with-submit.1",
     "xo": "*"
   },
   "xo": {
-    "esnext": true,
     "envs": [
       "browser",
       "webextensions"
