@@ -4,11 +4,9 @@ import json from 'rollup-plugin-json';
 
 export default [
 	'src/content.js',
-	'src/background.js',
-	'src/options/index.js'
 ].map(entry => ({
 	entry,
-	dest: entry.replace('src', 'extension'),
+	dest: entry.replace('src', 'refined-github.safariextension'),
 	plugins: [
 		nodeResolve({
 			browser: true

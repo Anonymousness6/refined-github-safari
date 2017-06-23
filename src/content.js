@@ -1,5 +1,3 @@
-import 'webext-dynamic-content-scripts';
-import OptionsSync from 'webext-options-sync';
 import elementReady from 'element-ready';
 import gitHubInjection from 'github-injection';
 import toSemver from 'to-semver';
@@ -607,5 +605,4 @@ if (!pageDetect.isGist()) {
 	addTrendingMenuItem();
 }
 
-const options = new OptionsSync().getAll();
-domLoaded.then(() => options).then(init);
+domLoaded.then(() => safari.extension.settings).then(init);

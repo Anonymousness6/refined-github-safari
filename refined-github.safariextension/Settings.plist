@@ -12,5 +12,15 @@
 		<key>Type</key>
 		<string>TextField</string>
 	</dict>
+	<dict>
+		<key>DefaultValue</key>
+		<string>true</string>
+		<key>Key</key>
+		<string>hideStarsOwnRepos</string>
+		<key>Title</key>
+		<string>Hide Stars own repos</string>
+		<key>Type</key>
+		<string>CheckBox</string>
+	</dict>
 </array>
 </plist>
