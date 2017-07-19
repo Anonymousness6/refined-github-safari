@@ -1,6 +1,6 @@
 import copyToClipboard from 'copy-text-to-clipboard';
 import select from 'select-dom';
-import $ from './vendor/jquery.slim.min';
+import {h} from 'dom-chef';
 
 export default () => {
 	// Button already added (partial page nav), or non-text file
@@ -10,7 +10,9 @@ export default () => {
 
 	const targetSibling = select('#raw-url');
 	const fileUri = targetSibling.getAttribute('href');
-	$(`<a href="${fileUri}" class="btn btn-sm BtnGroup-item copy-btn">Copy</a>`).insertBefore(targetSibling);
+	targetSibling.insertAdjacentElement('beforeBegin',
+		<a href={fileUri} class="btn btn-sm BtnGroup-item copy-btn">Copy</a>
+	);
 
 	$(document).on('click', '.copy-btn', e => {
 		e.preventDefault();

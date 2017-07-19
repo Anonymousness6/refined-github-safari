@@ -30,7 +30,13 @@ export const isPRFiles = () => isRepo() && /^\/pull\/\d+\/files/.test(getRepoPat
 
 export const isPRCommit = () => isRepo() && /^\/pull\/\d+\/commits\/[0-9a-f]{5,40}/.test(getRepoPath());
 
+export const isMilestoneList = () => isRepo() && /^\/milestones\/?$/.test(getRepoPath());
+
 export const isMilestone = () => isRepo() && /^\/milestone\/\d+/.test(getRepoPath());
+
+export const isLabelList = () => isRepo() && /^\/labels\/?(((?=\?).*)|$)/.test(getRepoPath());
+
+export const isLabel = () => isRepo() && /^\/labels\/\w+/.test(getRepoPath());
 
 export const isCommitList = () => isRepo() && /^\/commits\//.test(getRepoPath());
 
@@ -40,7 +46,7 @@ export const isCommit = () => isSingleCommit() || isPRCommit() || (isPRFiles() &
 
 export const isCompare = () => isRepo() && /^\/compare/.test(getRepoPath());
 
-export const hasCode = () => isRepo() && select.exists('.blob-code-inner');
+export const hasCode = () => isRepo() && select.exists('.highlight');
 
 export const hasDiff = () => isRepo() && (isSingleCommit() || isPRCommit() || isPRFiles() || isCompare() || (isPR() && select.exists('.diff-table')));
 
@@ -48,7 +54,7 @@ export const isReleases = () => isRepo() && /^\/(releases|tags)/.test(getRepoPat
 
 export const isBlame = () => isRepo() && /^\/blame\//.test(getRepoPath());
 
-export const isNotifications = () => /\/notifications(\/participating)?/.test(location.pathname);
+export const isNotifications = () => location.pathname.startsWith('/notifications');
 
 export const isRepoSettings = () => isRepo() && /^\/settings/.test(getRepoPath());
 

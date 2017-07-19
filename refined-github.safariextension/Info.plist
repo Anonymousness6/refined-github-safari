@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Sindre Sorhus &amp; Mathieu Dutour</string>
 	<key>Builder Version</key>
-	<string>12603.2.4</string>
+	<string>12604.1.29</string>
 	<key>CFBundleDisplayName</key>
 	<string>Refined For Github</string>
 	<key>CFBundleIdentifier</key>
@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.20.1</string>
+	<string>17.7.18</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>17.7.18</string>
 	<key>Chrome</key>
 	<dict>
 		<key>Database Quota</key>
@@ -27,13 +27,13 @@
 		<dict>
 			<key>Start</key>
 			<array>
+				<string>jquery-3.slim.min.js</string>
 				<string>content.js</string>
 			</array>
 		</dict>
 		<key>Stylesheets</key>
 		<array>
 			<string>content.css</string>
-			<string>custom.css</string>
 		</array>
 	</dict>
 	<key>Description</key>

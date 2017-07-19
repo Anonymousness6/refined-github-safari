@@ -1,5 +1,6 @@
+import gitHubInjection from 'github-injection';
 import select from 'select-dom';
-import $ from './vendor/jquery.slim.min';
+import {h} from 'dom-chef';
 import * as icons from './icons';
 import * as pageDetect from './page-detect';
 
@@ -16,8 +17,14 @@ function stripHash(url) {
 }
 
 function addMarkUnreadButton() {
-	$('<button class="btn btn-sm btn-mark-unread js-mark-unread">Mark as unread</button>')
-		.appendTo('.js-thread-subscription-status');
+	const container = select('.js-thread-subscription-status');
+	if (container) {
+		const button = <button class="btn btn-sm btn-mark-unread js-mark-unread">Mark as unread</button>;
+		button.addEventListener('click', markUnread, {
+			once: true
+		});
+		container.append(button);
+	}
 }
 
 function markRead(url) {
@@ -78,7 +85,7 @@ function markUnread() {
 	});
 
 	storeNotifications(unreadNotifications);
-	unreadIndicatorIcon();
+	updateUnreadIndicator();
 
 	this.setAttribute('disabled', 'disabled');
 	this.textContent = 'Marked as unread';
@@ -106,7 +113,7 @@ function renderNotifications() {
 
 	if (isEmptyPage()) {
 		select('.blankslate').remove();
-		$('.js-navigation-container').append('<div class="notifications-list"></div>');
+		select('.js-navigation-container').append(<div class="notifications-list"></div>);
 	}
 
 	unreadNotifications.forEach(notification => {
@@ -149,21 +156,23 @@ function renderNotifications() {
 
 		const hasList = select.exists(`a.notifications-repo-link[title="${repository}"]`);
 		if (!hasList) {
-			const list = $(`
+			const list = (
 				<div class="boxed-group flush">
 					<form class="boxed-group-action">
 						<button class="mark-all-as-read css-truncate tooltipped tooltipped-w js-mark-all-read" aria-label="Mark all notifications as read">
-							${icons.check}
+							{icons.check}
 						</button>
 					</form>
+
 					<h3>
-						<a href="/${repository}" class="css-truncate css-truncate-target notifications-repo-link" title="${repository}">
-							${repository}
+						<a href={'/' + repository} class="css-truncate css-truncate-target notifications-repo-link" title={repository}>
+							{repository}
 						</a>
 					</h3>
-					<ul class="boxed-group-inner list-group notifications"></ul>
+
+					<ul class="boxed-group-inner list-group notifications"/>
 				</div>
-			`);
+			);
 
 			$('.notifications-list').prepend(list);
 		}
@@ -176,45 +185,51 @@ function renderNotifications() {
 
 		const avatars = participants
 			.map(participant => {
-				return `
-					<img alt="@${participant.username}" class="avatar from-avatar" src="${participant.avatar}" width="39" height="39">
-				`;
-			})
-			.join('');
+				return <img alt={`@${participant.username}`} class="avatar from-avatar" src={participant.avatar} width={39} height={39}/>;
+			});
 
-		const item = $(`
-			<li class="list-group-item js-notification js-navigation-item unread ${type}-notification">
+		const item = (
+			<li class={`list-group-item js-notification js-navigation-item unread ${type}-notification`}>
 				<span class="list-group-item-name css-truncate">
-					${icon}
-					<a class="css-truncate-target js-notification-target js-navigation-open list-group-item-link" href="${url}">
-						${title}
+					{icon}
+
+					<a href={url} class="css-truncate-target js-notification-target js-navigation-open list-group-item-link">
+						{title}
 					</a>
 				</span>
+
 				<ul class="notification-actions">
 					<li class="delete">
 						<button aria-label="Mark as read" class="btn-link delete-note tooltipped tooltipped-w js-mark-read">
-							${icons.check}
+							{icons.check}
 						</button>
 					</li>
+
 					<li class="mute">
-						<button style="opacity: 0; pointer-events: none;">
-							${icons.mute}
+						<button style={{opacity: 0, pointerEvents: 'none'}}>
+							{icons.mute}
 						</button>
 					</li>
+
 					<li class="age">
-						<relative-time datetime="${date}" title="${dateTitle}"></relative-time>
+						<relative-time datetime={date} title={dateTitle}/>
 					</li>
-					<li class="tooltipped tooltipped-s" aria-label="${usernames}">
+
+					<li class="tooltipped tooltipped-s" aria-label={usernames}>
 						<div class="avatar-stack clearfix">
-							${avatars}
+							{avatars}
 						</div>
 					</li>
 				</ul>
 			</li>
-		`);
+		);
 
 		list.prepend(item);
 	});
+
+	// Make sure that all the boxes with unread items are at the top
+	// This is necessary in the "All notifications" view
+	$('.boxed-group:has(".unread")').prependTo('.notifications-list');
 }
 
 function isNotificationExist(url) {
@@ -233,21 +248,26 @@ function getUserName() {
 	return select('#user-links a.name img').getAttribute('alt').slice(1);
 }
 
-function unreadIndicatorIcon() {
-	const notificationIndicator = select('.header-nav-link.notification-indicator');
-	const notificationStatus = notificationIndicator.querySelector('.mail-status');
-	const hasUnread = select.exists('li.js-notification.unread') || loadNotifications().length > 0;
+function updateUnreadIndicator() {
+	const icon = select('.notification-indicator');
+	if (!icon) {
+		return;
+	}
+	const statusMark = icon.querySelector('.mail-status');
+	const hasRealNotifications = icon.matches('[data-ga-click$=":unread"]');
+
+	const hasUnread = hasRealNotifications || loadNotifications().length > 0;
 	const label = hasUnread ? 'You have unread notifications' : 'You have no unread notifications';
 
-	notificationStatus.classList.toggle('unread', hasUnread);
-	notificationIndicator.setAttribute('aria-label', label);
+	icon.setAttribute('aria-label', label);
+	statusMark.classList.toggle('unread', hasUnread);
 }
 
 function markNotificationRead(e) {
 	const notification = e.target.closest('li.js-notification');
 	const a = notification.querySelector('a.js-notification-target');
 	markRead(a.href);
-	unreadIndicatorIcon();
+	updateUnreadIndicator();
 }
 
 function markAllNotificationsRead(e) {
@@ -256,7 +276,7 @@ function markAllNotificationsRead(e) {
 	for (const a of repoGroup.querySelectorAll('a.js-notification-target')) {
 		markRead(a.href);
 	}
-	unreadIndicatorIcon();
+	updateUnreadIndicator();
 }
 
 function addCustomAllReadBtn() {
@@ -265,17 +285,21 @@ function addCustomAllReadBtn() {
 		return;
 	}
 
-	$('#notification-center .tabnav-tabs:first').append(`
+	$('#notification-center .tabnav-tabs:first').append(
 		<div class="float-right">
-		    <a href="#mark_as_read_confirm_box" class="btn btn-sm " rel="facebox">Mark all as read</a>
-  			<div id="mark_as_read_confirm_box" style="display:none">
-        		<h2 class="facebox-header" data-facebox-id="facebox-header">Are you sure?</h2>
-        		<p data-facebox-id="facebox-description">Are you sure you want to mark all unread notifications as read?</p>
-            	<div class="full-button">
-                	<button  id="clear-local-notification" class="btn btn-block">Mark all notifications as read</button>
-            	</div>
-  			</div>
-  		</div>`);
+			<a href="#mark_as_read_confirm_box" class="btn btn-sm" rel="facebox">Mark all as read</a>
+
+			<div id="mark_as_read_confirm_box" style={{display: 'none'}}>
+					<h2 class="facebox-header" data-facebox-id="facebox-header">Are you sure?</h2>
+
+					<p data-facebox-id="facebox-description">Are you sure you want to mark all unread notifications as read?</p>
+
+					<div class="full-button">
+							<button id="clear-local-notification" class="btn btn-block">Mark all notifications as read</button>
+					</div>
+			</div>
+		</div>
+	);
 
 	$(document).on('click', '#clear-local-notification', () => {
 		storeNotifications([]);
@@ -283,7 +307,7 @@ function addCustomAllReadBtn() {
 	});
 }
 
-function countLocalNotifications() {
+function updateLocalNotificationsCount() {
 	const unreadCount = select('#notification-center .filter-list a[href="/notifications"] .count');
 	const githubNotificationsCount = Number(unreadCount.textContent);
 	const localNotifications = loadNotifications();
@@ -294,20 +318,26 @@ function countLocalNotifications() {
 }
 
 function setup() {
-	if (pageDetect.isNotifications()) {
-		renderNotifications();
-		addCustomAllReadBtn();
-		countLocalNotifications();
-		$(document).on('click', '.js-mark-read', markNotificationRead);
-		$(document).on('click', '.js-mark-all-read', markAllNotificationsRead);
-		$(document).on('click', 'form[action="/notifications/mark"] button', () => {
-			storeNotifications([]);
-		});
-	} else {
-		markRead(location.href);
-		addMarkUnreadButton();
-		$(document).one('click', '.js-mark-unread', markUnread);
-	}
+	gitHubInjection(window, () => {
+		destroy();
+
+		if (pageDetect.isNotifications()) {
+			renderNotifications();
+			addCustomAllReadBtn();
+			updateLocalNotificationsCount();
+			$(document).on('click', '.js-mark-read', markNotificationRead);
+			$(document).on('click', '.js-mark-all-read', markAllNotificationsRead);
+			$(document).on('click', '.js-delete-notification button', updateUnreadIndicator);
+			$(document).on('click', 'form[action="/notifications/mark"] button', () => {
+				storeNotifications([]);
+			});
+		} else if (pageDetect.isPR() || pageDetect.isIssue()) {
+			markRead(location.href);
+			addMarkUnreadButton();
+		}
+
+		updateUnreadIndicator();
+	});
 }
 
 function destroy() {
@@ -317,6 +347,5 @@ function destroy() {
 
 export default {
 	setup,
-	destroy,
-	unreadIndicatorIcon
+	destroy
 };

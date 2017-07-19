@@ -18,7 +18,7 @@
 		<key>Key</key>
 		<string>hideStarsOwnRepos</string>
 		<key>Title</key>
-		<string>Hide Stars own repos</string>
+		<string>Hide other users starring/forking your repos</string>
 		<key>Type</key>
 		<string>CheckBox</string>
 	</dict>

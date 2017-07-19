@@ -39,7 +39,7 @@
 }
 
 /* Remove news feed tips */
-.news form + .text-center {
+.news > .text-center {
 	display: none !important;
 }
 
@@ -132,22 +132,24 @@
 }
 
 /* Move the dashboard organization switcher to the right column */
-.account-switcher {
-	position: absolute !important;
-	right: 10px !important;
-	margin-top: 0 !important;
+.page-dashboard .news.column.two-thirds .account-switcher {
+	/* Hide switcher from the main column, but if JS fails show it */
+	animation: temporarily-hide 5s steps(1, end);
 }
-.account-switcher button {
-	width: 313px !important;
-	z-index: 0 !important;
+@keyframes temporarily-hide {
+	from {
+		position: absolute;
+		top: -1000px;
+	}
 }
-.account-switcher .select-menu-button-gravatar {
+.page-dashboard .account-switcher button {
+	width: 100%;
+	margin-bottom: 15px;
+}
+.page-dashboard .account-switcher .select-menu-button-gravatar {
 	float: none !important;
 	display: inline-block !important;
 	vertical-align: top !important;
-}
-.dashboard-sidebar {
-	padding-top: 50px;
 }
 /* Organization dashboard */
 .orgpage .underline-nav {
@@ -172,6 +174,11 @@
 a .commit-ref:hover,
 a .commit-ref:hover span {
 	text-decoration: underline !important;
+}
+
+/* The extra span on branch names interferes with a possible deletion line-through */
+.commit-ref span {
+	text-decoration: inherit;
 }
 
 /* Remove the "new feature" notification box */
@@ -248,21 +255,33 @@ forked a repo
 	min-height: 1px;
 }
 
+.news .alert {
+	padding: 0 0 0 45px !important;
+}
+
+:root .news .alert .body { /* Higher specificity, avoids !important */
+	padding: 1em 0;
+}
+
 /*
 Remove padding from body of simple news alerts in Dashboard since some will be hidden
 we will add it back on for the simple news alerts we decide to show
 */
 .news .alert.create.simple,
 .news .alert.create.simple .body {
-	padding-top: 0;
-	padding-bottom: 0;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
 }
 
 /* Add padding back to the contents of simple news alerts in Dashboard */
-.news .alert.create.simple .body .title,
+.news .alert.create.simple .body .title {
+	padding-bottom: 1.5em !important;
+}
 .news .alert.create.simple .body .time {
-	padding-top: 1em;
-	padding-bottom: 1em;
+	padding-top: 1.5em !important;
+}
+.news .alert.create.simple .body .dashboard-event-icon {
+	top: 22px !important;
 }
 
 /* Don't show contents of simple news alert in Dashboard when you create a branch */
@@ -272,53 +291,32 @@ we will add it back on for the simple news alerts we decide to show
 	display: none;
 }
 
-/* Increase visibility of news item when someone stars a repo */
-.watch_started.simple .body {
-	min-height: 55px;
+/* Align items top to bottom */
+.news .alert .body,
+.news .alert .body .simple {
+	display: flex;
+	flex-direction: column;
 }
 
-svg.octicon.octicon-star.dashboard-event-icon {
+/* Move time to the top of news item */
+.news .alert .body .time {
+	order: -1;
+}
+
+/* Highlight all the titles */
+.news .alert .body .title {
+	font-size: 14px !important;
+	font-weight: 600 !important;
+	color: inherit !important;
+}
+
+/* Increase size of all event icons */
+.news .alert svg.octicon.dashboard-event-icon {
 	height: 32px !important;
 	width: 28px !important;
 }
 
-.watch_started .time {
-	position: absolute;
-	top: 10px;
-	left: 45px;
-}
 
-.watch_started.simple.alert .simple .title {
-	position: absolute;
-	top: 26px;
-	font-size: 14px !important;
-	font-weight: bold;
-	color: inherit !important;
-}
-
-/* Created repository style in dashboard */
-.news .create.simple.alert .body {
-	min-height: 69px;
-}
-
-svg.octicon.octicon-repo.dashboard-event-icon {
-	height: 32px !important;
-	width: 28px !important;
-}
-
-.create.simple.alert .simple .title {
-	position: absolute;
-	top: 10px;
-	font-size: 14px !important;
-	font-weight: bold;
-	color: inherit !important;
-}
-
-.create.simple.alert .simple .time {
-	position: absolute;
-	top: -2px;
-	left: 45px;
-}
 
 /* Decrease font-size on commit details so our custom patch and diff links fit */
 .commit .sha-block {
@@ -349,12 +347,14 @@ svg.octicon.octicon-repo.dashboard-event-icon {
 	font-size: 11.4px !important;
 }
 
-.refined-github-merge-commit .commit-avatar-cell svg {
+.refined-github-merge-commit .octicon-git-pull-request {
 	color: #4078c0;
 	margin-left: 9px;
+	width: 27px;
+	height: 36px;
 }
 
-.refined-github-merge-commit .avatar-parent-child img.avatar-child {
+.refined-github-merge-commit .avatar-child {
 	width: 16px !important;
 	height: 16px !important;
 }
@@ -381,6 +381,11 @@ svg.octicon.octicon-repo.dashboard-event-icon {
 	position: absolute;
 }
 
+/* Move new button to the right on single commit page */
+#toc .refined-github-toggle-whitespace {
+	float: right;
+}
+
 /* Limit width of commit title and description inputs to 50/80 chars */
 #commit-summary-input, #commit-description-textarea {
 	font-family: monospace !important;
@@ -395,13 +400,7 @@ svg.octicon.octicon-repo.dashboard-event-icon {
 }
 
 /* Make tab indented code more readable on GitHub and Gist */
-.tab-size[data-tab-size='2'],
-.tab-size[data-tab-size='4'],
-.tab-size[data-tab-size='8'],
-.inline-review-comment,
-.gist table.lines,
-.highlight pre, /* Readme code blocks */
-.blob-code-inner /* PR inline diff */ {
+* {
 	-moz-tab-size: 4 !important;
 	tab-size: 4 !important;
 }
@@ -544,11 +543,6 @@ Hidden content area created to increase hover target
 	border-top: none !important;
 }
 
-.comment-full-name {
-	font-weight: normal;
-	margin-left: 4px;
-}
-
 /* Mark as unread */
 .btn-mark-unread {
 	margin-top: 8px;
@@ -580,7 +574,7 @@ Hidden content area created to increase hover target
 	user-select: none;
 }
 
-/* Restore removed space with unselectable one*/
+/* Restore removed space with unselectable one */
 .refined-github-diff-signs .blob-code-inner:before {
 	content: ' ' !important;
 	user-select: none;
@@ -594,6 +588,24 @@ Hidden content area created to increase hover target
 /* Fix for diffheader filename */
 .diffbar > .diffstat {
 	float: right;
+}
+
+/* Fix PR diffbar links position #474 */
+.stale-files-tab,
+.subset-files-tab {
+	font-size: 0 !important;
+}
+.subset-files-tab .stale-files-tab-link,
+.stale-files-tab .stale-files-tab-link {
+	font-size: 14px;
+}
+.stale-files-tab-link:before {
+	content: 'Out of date. ';
+	font-weight: normal;
+}
+.stale-files-tab-link:before {
+	content: 'Subset of changes. ';
+	font-weight: normal;
 }
 
 /* Copy button for gists margin */
@@ -633,14 +645,6 @@ div.inline-comment-form .form-actions,
 	float: none;
 }
 
-/* "Copy file path" button in pull request diffs */
-#rg-copy-filepath-btn,
-#rg-copy-filepath-btn:focus,
-#rg-copy-filepath-btn:active {
-	border: none;
-	background: transparent;
-}
-
 /* "Add a Project" button */
 #refined-github-project-new-link {
 	margin-top: 5px;
@@ -649,23 +653,6 @@ div.inline-comment-form .form-actions,
 /* Decrease the size of the search box to fit 'Yours' menu item */
 .subnav-search-input[aria-label="Search all issues"] {
 	width: 420px;
-}
-
-/* Alternate monospace font stack, sorted by least popular so you're most likely to get the font you want */
-code,
-kbd,
-pre,
-tt,
-.CodeMirror-lines,
-.ace_editor.ace-github-light,
-.blob-code-inner,
-.export-phrase pre,
-.file-editor-textarea,
-.gollum-editor .expanded textarea,
-.gollum-editor .gollum-editor-body,
-.input-monospace,
-.wiki-wrapper .wiki-history .commit-meta code {
-	font-family: 'Operator Mono SSm', 'Operator Mono', 'Fira Code', 'Ubuntu Mono', 'Droid Sans Mono', 'Liberation Mono', 'Source Code Pro', Menlo, Consolas, Courier, monospace !important;
 }
 
 .CodeMirror-lines pre.CodeMirror-line {
@@ -680,4 +667,44 @@ tt,
 /* Remove the "Styling with Markdown is supported" link when a PR comment is in edit mode */
 a.tabnav-extra[href$="mastering-markdown/"] {
 	display: none !important;
+}
+
+/* Hide empty description of repo */
+.repository-meta.mb-3 > .repository-meta-content > em {
+	display: none !important;
+}
+
+/* Hide marketplace navbar button */
+.header-nav-item > a[href='/marketplace'] {
+	display: none !important;
+}
+
+/* Move labels in the Issue/PR list below the title */
+.js-issue-row .lh-condensed {
+	display: grid;
+	grid-template-rows: auto auto auto;
+	grid-template-columns: auto 1fr;
+}
+.js-issue-row .labels {
+	grid-area: 3;
+	padding-top: 4px;
+	grid-column-start: span 2;
+}
+.js-issue-row .h4, /* Title */
+.js-issue-row .d-inline-block.mr-1 {  /* Build status */
+	grid-area: 1;
+	padding-right: 4px; /* Space before the build status */
+}
+.js-issue-row .mt-1.text-small.text-gray { /* Issue details line */
+	grid-area: 2;
+	grid-column-start: span 2;
+}
+.js-issue-row .label {
+	font-size: 11px !important;
+	padding: 2px 3px 3px 3px !important;
+}
+
+/* Fix for GHE More Dropdown positioning */
+.reponav-dropdown.active .dropdown-menu {
+	left: auto !important;
 }
