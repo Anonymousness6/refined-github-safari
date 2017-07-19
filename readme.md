@@ -1,6 +1,6 @@
 # <img src="refined-github.safariextension/icon.png" width="45" align="left"> Refined GitHub
 
-> Safari extension that simplifies the GitHub interface and adds useful features
+> Browser extension that simplifies the GitHub interface and adds useful features
 
 **Discuss it on [Product Hunt](https://www.producthunt.com/posts/refined-github)** 🦄
 
