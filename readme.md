@@ -1,16 +1,6 @@
 # <img src="refined-github.safariextension/icon.png" width="45" align="left"> Refined GitHub
 
 > Safari extension that simplifies the GitHub interface and adds useful features
-# <img src="extension/icon.png" width="45" align="left"> Refined GitHub [![Chrome version][badge-cws]][link-cws] [![Firefox version][badge-amo]][link-amo] [![Deployment][badge-travis]][link-travis]
-
-[badge-cws]: https://img.shields.io/chrome-web-store/v/hlepfoohegkhhmjieoechaddaejaokhf.svg?label=chrome
-[badge-amo]: https://img.shields.io/amo/v/refined-github-.svg?label=firefox
-[badge-travis]: https://img.shields.io/travis/sindresorhus/refined-github/master.svg?label=deployment
-[link-cws]: https://chrome.google.com/webstore/detail/refined-github/hlepfoohegkhhmjieoechaddaejaokhf "Version published on Chrome Web Store"
-[link-amo]: https://addons.mozilla.org/en-US/firefox/addon/refined-github-/ "Version published on Mozilla Add-ons"
-[link-travis]: https://travis-ci.org/sindresorhus/refined-github
-
-> Browser extension that simplifies the GitHub interface and adds useful features
 
 **Discuss it on [Product Hunt](https://www.producthunt.com/posts/refined-github)** 🦄
 
@@ -25,6 +15,7 @@ GitHub Enterprise is also supported by [authorizing your own domain in the optio
 
 ## Install
 
+- [**Safari** extension](https://safari-extensions.apple.com/details/?id=me.dutour.mathieu.refined-github-8SEPFSC7S3)
 - [**Chrome** extension](https://chrome.google.com/webstore/detail/refined-github/hlepfoohegkhhmjieoechaddaejaokhf)
 - [**Firefox** add-on](https://addons.mozilla.org/en-US/firefox/addon/refined-github-/)
 - Opera - Use [this Opera extension](https://addons.opera.com/en/extensions/details/download-chrome-extension-9/) to install the Chrome version.
