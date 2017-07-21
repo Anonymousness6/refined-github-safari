@@ -227,6 +227,53 @@
 
 	"use strict";
 
+	const mimicFn = __webpack_require__(28);
+
+	module.exports = (fn, options) => {
+		if ('function' != typeof fn) {
+			throw new TypeError(`Expected the first argument to be a function, got \`${typeof fn}\``);
+		}
+
+		options = options || {};
+
+		let timeout, result;
+
+
+		const debounced = function () {
+			const context = this,
+			      args = arguments,
+			      callNow = options.immediate && !timeout;
+
+			clearTimeout(timeout);
+			timeout = setTimeout(() => {
+				timeout = null;
+				if (!options.immediate) {
+					result = fn.apply(context, args);
+				}
+			}, options.wait || 0);
+
+			if (callNow) {
+				result = fn.apply(context, args);
+			}
+
+			return result;
+		};
+
+		mimicFn(debounced, fn);
+
+		debounced.cancel = () => {
+			if (timeout) {
+				clearTimeout(timeout);
+				timeout = null;
+			}
+		};
+
+		return debounced;
+	};
+}, function (module, exports, __webpack_require__) {
+
+	"use strict";
+
 	const PCancelable = __webpack_require__(10),
 	      selectorCache = new Map();
 
@@ -309,7 +356,7 @@
 	"use strict";
 
 	const issueRegex = __webpack_require__(16),
-	      createHtmlElement = __webpack_require__(6),
+	      createHtmlElement = __webpack_require__(7),
 	      groupedIssueRegex = new RegExp(`(${issueRegex().source})`, 'g'),
 	      linkify = (match, options) => {
 		let url = `${options.baseUrl}/`;
@@ -405,59 +452,29 @@
 			});
 		}
 	});
-}, function (module, exports, __webpack_require__) {
-
-	"use strict";
-
-	const mimicFn = __webpack_require__(28);
-
-	module.exports = (fn, options) => {
-		if ('function' != typeof fn) {
-			throw new TypeError(`Expected the first argument to be a function, got \`${typeof fn}\``);
-		}
-
-		options = options || {};
-
-		let timeout, result;
-
-
-		const debounced = function () {
-			const context = this,
-			      args = arguments,
-			      callNow = options.immediate && !timeout;
-
-			clearTimeout(timeout);
-			timeout = setTimeout(() => {
-				timeout = null;
-				if (!options.immediate) {
-					result = fn.apply(context, args);
-				}
-			}, options.wait || 0);
-
-			if (callNow) {
-				result = fn.apply(context, args);
-			}
-
-			return result;
-		};
-
-		mimicFn(debounced, fn);
-
-		debounced.cancel = () => {
-			if (timeout) {
-				clearTimeout(timeout);
-				timeout = null;
-			}
-		};
-
-		return debounced;
-	};
 }, function (module, __webpack_exports__, __webpack_require__) {
 
 	"use strict";
 
 	Object.defineProperty(__webpack_exports__, "__esModule", { value: !0 });
 
+	class SynchronousStorage {
+		constructor(get, set) {
+			this._get = get;
+			this._set = set;
+			return get().then(value => {
+				this._cache = value;
+				return this;
+			});
+		}
+		get() {
+			return this._cache;
+		}
+		set(value) {
+			this._cache = value;
+			return this._set(value);
+		}
+	}
 	var __WEBPACK_IMPORTED_MODULE_0_dom_chef__ = __webpack_require__(1),
 	    __WEBPACK_IMPORTED_MODULE_0_dom_chef___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_dom_chef__);
 
@@ -518,7 +535,7 @@
 	},
 	      hasCommentForm = () => __WEBPACK_IMPORTED_MODULE_0_select_dom___default.a.exists('.js-previewable-comment-form');
 
-	var __WEBPACK_IMPORTED_MODULE_0_github_injection__ = __webpack_require__(4),
+	var __WEBPACK_IMPORTED_MODULE_0_github_injection__ = __webpack_require__(5),
 	    __WEBPACK_IMPORTED_MODULE_0_github_injection___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_github_injection__),
 	    __WEBPACK_IMPORTED_MODULE_1_select_dom__ = __webpack_require__(0),
 	    __WEBPACK_IMPORTED_MODULE_1_select_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_select_dom__),
@@ -526,13 +543,7 @@
 	    __WEBPACK_IMPORTED_MODULE_2_dom_chef___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_dom_chef__);
 
 
-	function loadNotifications() {
-		return JSON.parse(localStorage.getItem('unreadNotifications') || '[]');
-	}
-
-	function storeNotifications(unreadNotifications) {
-		localStorage.setItem('unreadNotifications', JSON.stringify(unreadNotifications || '[]'));
-	}
+	let storage;
 
 	function stripHash(url) {
 		return url.replace(/#.+$/, '');
@@ -552,7 +563,7 @@
 	}
 
 	function markRead(url) {
-		const unreadNotifications = loadNotifications();
+		const unreadNotifications = storage.get();
 		unreadNotifications.forEach((notification, index) => {
 			if (notification.url === url) {
 				unreadNotifications.splice(index, 1);
@@ -565,7 +576,7 @@
 			li.classList.add('read');
 		}
 
-		storeNotifications(unreadNotifications);
+		storage.set(unreadNotifications);
 	}
 
 	function markUnread() {
@@ -593,7 +604,7 @@
 		const lastCommentTime = __WEBPACK_IMPORTED_MODULE_1_select_dom___default.a.all('.timeline-comment-header relative-time').pop(),
 		      dateTitle = lastCommentTime.title,
 		      date = lastCommentTime.getAttribute('datetime'),
-		      unreadNotifications = loadNotifications();
+		      unreadNotifications = storage.get();
 
 
 		unreadNotifications.push({
@@ -607,7 +618,7 @@
 			url
 		});
 
-		storeNotifications(unreadNotifications);
+		storage.set(unreadNotifications);
 		updateUnreadIndicator();
 
 		this.setAttribute('disabled', 'disabled');
@@ -615,7 +626,7 @@
 	}
 
 	function renderNotifications() {
-		const unreadNotifications = loadNotifications().filter(notification => !isNotificationExist(notification.url)).filter(notification => {
+		const unreadNotifications = storage.get().filter(notification => !isNotificationExist(notification.url)).filter(notification => {
 			if (!isParticipatingPage()) {
 				return !0;
 			}
@@ -744,7 +755,7 @@
 		}
 		const statusMark = icon.querySelector('.mail-status'),
 		      hasRealNotifications = icon.matches('[data-ga-click$=":unread"]'),
-		      hasUnread = hasRealNotifications || 0 < loadNotifications().length,
+		      hasUnread = hasRealNotifications || 0 < storage.get().length,
 		      label = hasUnread ? 'You have unread notifications' : 'You have no unread notifications';
 
 
@@ -771,7 +782,7 @@
 
 	function addCustomAllReadBtn() {
 		const hasMarkAllReadBtnExists = __WEBPACK_IMPORTED_MODULE_1_select_dom___default.a.exists('#notification-center a[href="#mark_as_read_confirm_box"]');
-		if (hasMarkAllReadBtnExists || 0 === loadNotifications().length) {
+		if (hasMarkAllReadBtnExists || 0 === storage.get().length) {
 			return;
 		}
 
@@ -787,7 +798,7 @@
 		}, Object(__WEBPACK_IMPORTED_MODULE_2_dom_chef__.h)('button', { id: 'clear-local-notification', class: 'btn btn-block' }, 'Mark all notifications as read')))));
 
 		$(document).on('click', '#clear-local-notification', () => {
-			storeNotifications([]);
+			storage.set([]);
 			location.reload();
 		});
 	}
@@ -795,11 +806,22 @@
 	function updateLocalNotificationsCount() {
 		const unreadCount = __WEBPACK_IMPORTED_MODULE_1_select_dom___default()('#notification-center .filter-list a[href="/notifications"] .count'),
 		      githubNotificationsCount = +unreadCount.textContent,
-		      localNotifications = loadNotifications();
+		      localNotifications = storage.get();
 
 
 		if (localNotifications) {
 			unreadCount.textContent = githubNotificationsCount + localNotifications.length;
+		}
+	}
+
+	function migrateOldStorage() {
+		const oldStorage = localStorage.getItem('unreadNotifications');
+		if (oldStorage) {
+			const list = JSON.parse(oldStorage);
+			console.log('Migrating old unreadNotifications storage', list);
+			storage.set(list);
+			localStorage.setItem('_unreadNotifications_migrated', JSON.stringify(list));
+			localStorage.removeItem('unreadNotifications');
 		}
 	}
 
@@ -809,7 +831,27 @@
 	}
 
 	var mark_unread_defaultExport = {
-		setup: function () {
+		setup: async function () {
+			storage = await new SynchronousStorage(() => {
+				return new Promise((resolve, reject) => {
+					try {
+						const res = JSON.parse(localStorage.unreadNotifications || '[]');
+						resolve(res);
+					} catch (err) {
+						reject(err);
+					}
+				});
+			}, unreadNotifications => {
+				return new Promise((resolve, reject) => {
+					try {
+						localStorage.unreadNotifications = JSON.stringify(unreadNotifications);
+						resolve();
+					} catch (err) {
+						reject(err);
+					}
+				});
+			});
+			migrateOldStorage();
 			__WEBPACK_IMPORTED_MODULE_0_github_injection___default()(window, () => {
 				destroy();
 
@@ -821,7 +863,7 @@
 					$(document).on('click', '.js-mark-all-read', markAllNotificationsRead);
 					$(document).on('click', '.js-delete-notification button', updateUnreadIndicator);
 					$(document).on('click', 'form[action="/notifications/mark"] button', () => {
-						storeNotifications([]);
+						storage.set([]);
 					});
 				} else if (isPR() || isIssue()) {
 					markRead(location.href);
@@ -889,7 +931,7 @@
 			});
 		}
 	},
-	    __WEBPACK_IMPORTED_MODULE_0_debounce_fn__ = __webpack_require__(8),
+	    __WEBPACK_IMPORTED_MODULE_0_debounce_fn__ = __webpack_require__(3),
 	    __WEBPACK_IMPORTED_MODULE_0_debounce_fn___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_debounce_fn__),
 	    diffheader___WEBPACK_IMPORTED_MODULE_1_select_dom__ = __webpack_require__(0),
 	    diffheader___WEBPACK_IMPORTED_MODULE_1_select_dom___default = __webpack_require__.n(diffheader___WEBPACK_IMPORTED_MODULE_1_select_dom__),
@@ -1036,9 +1078,9 @@
 	},
 	    utils___WEBPACK_IMPORTED_MODULE_0_select_dom__ = __webpack_require__(0),
 	    utils___WEBPACK_IMPORTED_MODULE_0_select_dom___default = __webpack_require__.n(utils___WEBPACK_IMPORTED_MODULE_0_select_dom__),
-	    __WEBPACK_IMPORTED_MODULE_1_element_ready__ = __webpack_require__(3),
+	    __WEBPACK_IMPORTED_MODULE_1_element_ready__ = __webpack_require__(4),
 	    __WEBPACK_IMPORTED_MODULE_1_element_ready___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_element_ready__),
-	    __WEBPACK_IMPORTED_MODULE_2_dom_loaded__ = __webpack_require__(7),
+	    __WEBPACK_IMPORTED_MODULE_2_dom_loaded__ = __webpack_require__(8),
 	    __WEBPACK_IMPORTED_MODULE_2_dom_loaded___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_dom_loaded__);
 
 
@@ -1049,11 +1091,6 @@
 		map[key].push(item);
 		return map;
 	}, {}),
-	      emptyElement = element => {
-		while (element.firstChild) {
-			element.firstChild.remove();
-		}
-	},
 	      safeElementReady = selector => {
 		const waiting = __WEBPACK_IMPORTED_MODULE_1_element_ready___default()(selector);
 		__WEBPACK_IMPORTED_MODULE_2_dom_loaded___default.a.then(() => requestAnimationFrame(() => waiting.cancel()));
@@ -1069,67 +1106,31 @@
 		return new MutationObserver(listener).observe(el, options);
 	};
 
-	var reactions_avatars___WEBPACK_IMPORTED_MODULE_0_dom_chef__ = __webpack_require__(1),
-	    reactions_avatars___WEBPACK_IMPORTED_MODULE_0_dom_chef___default = __webpack_require__.n(reactions_avatars___WEBPACK_IMPORTED_MODULE_0_dom_chef__);
+	var reactions_avatars___WEBPACK_IMPORTED_MODULE_0_debounce_fn__ = __webpack_require__(3),
+	    reactions_avatars___WEBPACK_IMPORTED_MODULE_0_debounce_fn___default = __webpack_require__.n(reactions_avatars___WEBPACK_IMPORTED_MODULE_0_debounce_fn__),
+	    reactions_avatars___WEBPACK_IMPORTED_MODULE_1_select_dom__ = __webpack_require__(0),
+	    reactions_avatars___WEBPACK_IMPORTED_MODULE_1_select_dom___default = __webpack_require__.n(reactions_avatars___WEBPACK_IMPORTED_MODULE_1_select_dom__),
+	    reactions_avatars___WEBPACK_IMPORTED_MODULE_2_dom_chef__ = __webpack_require__(1),
+	    reactions_avatars___WEBPACK_IMPORTED_MODULE_2_dom_chef___default = __webpack_require__.n(reactions_avatars___WEBPACK_IMPORTED_MODULE_2_dom_chef__);
 
 
-	function add(currentUser) {
-		$('.comment-reactions.has-reactions').each((index, reactionsContainer) => {
-			const $reactionsContainer = $(reactionsContainer),
-			      $reactionButtons = $reactionsContainer.find('.comment-reactions-options .reaction-summary-item[aria-label]');
+	function add() {
+		const currentUser = getUsername();
+		for (const element of reactions_avatars___WEBPACK_IMPORTED_MODULE_1_select_dom___default.a.all(`
+		.comment-reactions.has-reactions
+		.comment-reactions-options
+		.reaction-summary-item[aria-label]:not(.rgh-reactions)
+	`)) {
+			element.classList.add('rgh-reactions');
+			const participants = element.getAttribute('aria-label').replace(/ reacted with.*/, '').replace(/,? and /, ', ').replace(/, \d+ more/, '').split(', ').filter(username => username !== currentUser).filter((u, i) => 3 > i).map(user => Object(reactions_avatars___WEBPACK_IMPORTED_MODULE_2_dom_chef__.h)('a', { href: `/${user}` }, Object(reactions_avatars___WEBPACK_IMPORTED_MODULE_2_dom_chef__.h)('img', { src: `/${user}.png` })));
 
-
-			$reactionButtons.each((index, element) => {
-				const $element = $(element),
-				      participantCount = +$element.html().split('/g-emoji>')[1],
-				      participants = $element.attr('aria-label').replace(/ reacted with.*/, '').replace(/,? and /, ', ').replace(/, \d+ more/, '').split(', '),
-				      userPosition = participants.indexOf(currentUser);
-
-				if (1 == participantCount && -1 < userPosition) {
-					return;
-				}
-
-				if (!element.querySelector('div.participants-container')) {
-					element.append(Object(reactions_avatars___WEBPACK_IMPORTED_MODULE_0_dom_chef__.h)('div', {
-						class: 'participants-container'
-					}));
-				}
-
-				if (-1 < userPosition) {
-					participants.splice(userPosition, 1);
-				}
-
-				const firstThreeParticipants = participants.slice(0, 3),
-				      participantsContainer = element.querySelector('.participants-container');
-
-				emptyElement(participantsContainer);
-
-				for (const participant of firstThreeParticipants) {
-					participantsContainer.append(Object(reactions_avatars___WEBPACK_IMPORTED_MODULE_0_dom_chef__.h)('a', { href: `/${participant}` }, Object(reactions_avatars___WEBPACK_IMPORTED_MODULE_0_dom_chef__.h)('img', { src: `/${participant}.png` })));
-				}
-			});
-		});
+			element.append(...participants);
+		}
 	}
 
-	function reapply(event, currentUser) {
-		if (0 === $(event.target).closest('.add-reactions-options-item, .reaction-summary-item').not('.add-reaction-btn').length) {
-			return;
-		}
-
-		const applyReactions = setInterval(() => {
-			add(currentUser);
-			clearInterval(applyReactions);
-		}, 500);
-	}
-
-	var reactions_avatars_defaultExport = {
-		add,
-		reapply,
-		addListener: function (currentUser) {
-			$(document).on('click', event => {
-				reapply(event, currentUser);
-			});
-		}
+	var reactions_avatars_defaultExport = () => {
+		add();
+		document.addEventListener('socket:message', reactions_avatars___WEBPACK_IMPORTED_MODULE_0_debounce_fn___default()(add, { wait: 100 }));
 	},
 	    domify_defaultExport = html => {
 		const template = document.createElement('template');
@@ -1286,10 +1287,12 @@
 
 		const markdown = getSmarterMarkdown(holder.innerHTML);
 
-		__WEBPACK_IMPORTED_MODULE_1_copy_text_to_clipboard___default()(markdown);
-
-		event.stopImmediatePropagation();
-		event.preventDefault();
+		if (__WEBPACK_IMPORTED_MODULE_1_copy_text_to_clipboard___default()(markdown)) {
+			event.stopImmediatePropagation();
+			event.preventDefault();
+		} else {
+			console.warn('Refined GitHub: copy-markdown failed');
+		}
 	},
 	    get_text_nodes_defaultExport = el => {
 		const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT),
@@ -1308,7 +1311,7 @@
 	    linkify_urls_in_code___WEBPACK_IMPORTED_MODULE_0_select_dom___default = __webpack_require__.n(linkify_urls_in_code___WEBPACK_IMPORTED_MODULE_0_select_dom__),
 	    __WEBPACK_IMPORTED_MODULE_1_linkify_urls__ = __webpack_require__(37),
 	    __WEBPACK_IMPORTED_MODULE_1_linkify_urls___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_linkify_urls__),
-	    __WEBPACK_IMPORTED_MODULE_2_linkify_issues__ = __webpack_require__(5),
+	    __WEBPACK_IMPORTED_MODULE_2_linkify_issues__ = __webpack_require__(6),
 	    __WEBPACK_IMPORTED_MODULE_2_linkify_issues___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_linkify_issues__);
 
 
@@ -1354,43 +1357,15 @@
 		for (const el of wrappers) {
 			el.classList.add(linkifiedURLClass);
 		}
-	};
-
-	const callbacks = new Set(),
-	      observer = new MutationObserver(records => {
-		for (const cb of callbacks) {
-			cb(records, observer);
-		}
-	});
-	var on_feed_update_defaultExport = {
-		on(cb) {
-			if ('function' != typeof cb) {
-				throw new TypeError('cb must be a function');
-			}
-			if (0 === callbacks.size) {
-				observer.observe(document.querySelector('#dashboard .news'), {
-					childList: !0
-				});
-			}
-			callbacks.add(cb);
-		},
-		off(cb) {
-			if ('function' != typeof cb) {
-				throw new TypeError('cb must be a function');
-			}
-			callbacks.delete(cb);
-			if (0 === callbacks.size) {
-				observer.disconnect();
-			}
-		}
 	},
 	    auto_load_more_news___WEBPACK_IMPORTED_MODULE_0_select_dom__ = __webpack_require__(0),
 	    auto_load_more_news___WEBPACK_IMPORTED_MODULE_0_select_dom___default = __webpack_require__.n(auto_load_more_news___WEBPACK_IMPORTED_MODULE_0_select_dom__),
-	    __WEBPACK_IMPORTED_MODULE_1_debounce_fn__ = __webpack_require__(8),
+	    __WEBPACK_IMPORTED_MODULE_1_debounce_fn__ = __webpack_require__(3),
 	    __WEBPACK_IMPORTED_MODULE_1_debounce_fn___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_debounce_fn__);
 
 
-	let btn;
+	let btn, newsfeedObserver;
+
 
 	const loadMore = __WEBPACK_IMPORTED_MODULE_1_debounce_fn___default()(() => {
 		btn.click();
@@ -1432,7 +1407,7 @@
 		if (btn) {
 			inView.observe(btn);
 		} else {
-			on_feed_update_defaultExport.off(findButton);
+			newsfeedObserver.disconnect();
 		}
 	};
 
@@ -1440,8 +1415,7 @@
 		const form = auto_load_more_news___WEBPACK_IMPORTED_MODULE_0_select_dom___default()('.ajax-pagination-form');
 		if (form) {
 			form.addEventListener('submit', e => e.preventDefault());
-
-			on_feed_update_defaultExport.on(findButton);
+			newsfeedObserver = observeEl('#dashboard .news', findButton);
 			findButton();
 		}
 	},
@@ -1484,19 +1458,19 @@
 			el.classList.add('refined-github-op');
 		}
 	},
-	    __WEBPACK_IMPORTED_MODULE_0_element_ready__ = __webpack_require__(3),
+	    __WEBPACK_IMPORTED_MODULE_0_element_ready__ = __webpack_require__(4),
 	    __WEBPACK_IMPORTED_MODULE_0_element_ready___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_element_ready__),
-	    __WEBPACK_IMPORTED_MODULE_1_github_injection__ = __webpack_require__(4),
+	    __WEBPACK_IMPORTED_MODULE_1_github_injection__ = __webpack_require__(5),
 	    __WEBPACK_IMPORTED_MODULE_1_github_injection___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_github_injection__),
 	    __WEBPACK_IMPORTED_MODULE_2_shorten_repo_url__ = __webpack_require__(11),
 	    __WEBPACK_IMPORTED_MODULE_2_shorten_repo_url___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_shorten_repo_url__),
 	    __WEBPACK_IMPORTED_MODULE_3_to_semver__ = __webpack_require__(14),
 	    __WEBPACK_IMPORTED_MODULE_3_to_semver___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_to_semver__),
-	    __WEBPACK_IMPORTED_MODULE_4_linkify_issues__ = __webpack_require__(5),
+	    __WEBPACK_IMPORTED_MODULE_4_linkify_issues__ = __webpack_require__(6),
 	    __WEBPACK_IMPORTED_MODULE_4_linkify_issues___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_linkify_issues__),
 	    __WEBPACK_IMPORTED_MODULE_5_select_dom__ = __webpack_require__(0),
 	    __WEBPACK_IMPORTED_MODULE_5_select_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_select_dom__),
-	    __WEBPACK_IMPORTED_MODULE_6_dom_loaded__ = __webpack_require__(7),
+	    __WEBPACK_IMPORTED_MODULE_6_dom_loaded__ = __webpack_require__(8),
 	    __WEBPACK_IMPORTED_MODULE_6_dom_loaded___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_dom_loaded__),
 	    __WEBPACK_IMPORTED_MODULE_7_dom_chef__ = __webpack_require__(1),
 	    __WEBPACK_IMPORTED_MODULE_7_dom_chef___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_dom_chef__);
@@ -1917,20 +1891,16 @@
 		}
 
 		if (isDashboard()) {
-			const hideStarsOwnRepos = () => {
-				$('#dashboard .news .watch_started, #dashboard .news .fork').has(`.title a[href^="/${username}"]`).css('display', 'none');
-			};
-
 			if (options.hideStarsOwnRepos) {
-				hideStarsOwnRepos();
-				new MutationObserver(() => hideStarsOwnRepos()).observe(__WEBPACK_IMPORTED_MODULE_5_select_dom___default()('#dashboard .news'), { childList: !0 });
+				observeEl('#dashboard .news', () => {
+					$('#dashboard .news .watch_started, #dashboard .news .fork').has(`.title a[href^="/${username}"]`).css('display', 'none');
+				});
 			}
 
 			auto_load_more_news_defaultExport();
 		}
 
-		upload_button_defaultExport();
-		new MutationObserver(upload_button_defaultExport).observe(__WEBPACK_IMPORTED_MODULE_5_select_dom___default()('div[role=main]'), { childList: !0, subtree: !0 });
+		observeEl('div[role=main]', upload_button_defaultExport, { childList: !0, subtree: !0 });
 
 		if (isIssueSearch() || isPRSearch()) {
 			addYoursMenuItem();
@@ -1961,8 +1931,7 @@
 
 				if (isPR() || isIssue()) {
 					linkifyIssuesInTitles();
-					op_labels_defaultExport();
-					new MutationObserver(op_labels_defaultExport).observe(__WEBPACK_IMPORTED_MODULE_5_select_dom___default()('.new-discussion-timeline'), { childList: !0, subtree: !0 });
+					observeEl('.new-discussion-timeline', op_labels_defaultExport, { childList: !0, subtree: !0 });
 				}
 
 				if (isPRList() || isIssueList()) {
@@ -1983,8 +1952,7 @@
 				}
 
 				if (isPR() || isIssue() || isCommit()) {
-					reactions_avatars_defaultExport.add(username);
-					reactions_avatars_defaultExport.addListener(username);
+					reactions_avatars_defaultExport();
 					show_names_defaultExport();
 				}
 
@@ -4002,7 +3970,7 @@
 
 	"use strict";
 
-	const createHtmlElement = __webpack_require__(6),
+	const createHtmlElement = __webpack_require__(7),
 	      urlRegex = () => /((?:https?(?::\/\/))(?:www\.)?[a-zA-Z0-9-_.]+(?:\.[a-zA-Z0-9]{2,})(?:[-a-zA-Z0-9:%_+.~#?&//=@]*))/g,
 	      linkify = (href, options) => createHtmlElement({
 		name: 'a',

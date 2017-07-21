@@ -1,4 +1,3 @@
-import browser from 'webextension-polyfill';
 import gitHubInjection from 'github-injection';
 import select from 'select-dom';
 import {h} from 'dom-chef';
@@ -330,12 +329,24 @@ function migrateOldStorage() {
 async function setup() {
 	storage = await new SynchronousStorage(
 		() => {
-			return browser.storage.local.get({
-				unreadNotifications: []
-			}).then(storage => storage.unreadNotifications);
+			return new Promise((resolve, reject) => {
+				try {
+					const res = JSON.parse(localStorage.unreadNotifications || '[]')
+					resolve(res)
+				} catch (err) {
+					reject(err)
+				}
+			});
 		},
 		unreadNotifications => {
-			return browser.storage.local.set({unreadNotifications});
+			return new Promise((resolve, reject) => {
+				try {
+					localStorage.unreadNotifications = JSON.stringify(unreadNotifications)
+					resolve()
+				} catch (err) {
+					reject(err)
+				}
+			});
 		}
 	);
 	migrateOldStorage();

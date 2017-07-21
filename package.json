@@ -5,10 +5,7 @@
 		"watch": "webpack --watch",
 		"watch:sourcemap": "webpack --watch --devtool eval-cheap-module-source-map",
 		"minify": "cross-env BABEL_ENV=production babel --out-dir . refined-github.safariextension/content.js",
-		"release:amo": "cd extension && webext submit",
-		"release:cws": "cd extension && webstore upload --auto-publish",
-		"release": "run-s build minify update-version release:*",
-		"update-version": "dot-json extension/manifest.json version $(date -u +%y.%-m.%-d.%-H%M)"
+		"release": "run-s build minify"
 	},
 	"dependencies": {
 		"copy-text-to-clipboard": "^1.0.2",
