@@ -575,23 +575,18 @@ async function onDomReady() {
 
 	if (pageDetect.isDashboard()) {
 		// Hide other users starring/forking your repos
-		const hideStarsOwnRepos = () => {
-			$('#dashboard .news .watch_started, #dashboard .news .fork')
-				.has(`.title a[href^="/${username}"]`)
-				.css('display', 'none');
-		};
-
 		if (options.hideStarsOwnRepos) {
-			hideStarsOwnRepos();
-			new MutationObserver(() => hideStarsOwnRepos())
-				.observe(select('#dashboard .news'), {childList: true});
+			observeEl('#dashboard .news', () => {
+				$('#dashboard .news .watch_started, #dashboard .news .fork')
+					.has(`.title a[href^="/${username}"]`)
+					.css('display', 'none');
+			});
 		}
 
 		autoLoadMoreNews();
 	}
 
-	addUploadBtn();
-	new MutationObserver(addUploadBtn).observe(select('div[role=main]'), {childList: true, subtree: true});
+	observeEl('div[role=main]', addUploadBtn, {childList: true, subtree: true});
 
 	if (pageDetect.isIssueSearch() || pageDetect.isPRSearch()) {
 		addYoursMenuItem();
@@ -622,8 +617,7 @@ async function onDomReady() {
 
 			if (pageDetect.isPR() || pageDetect.isIssue()) {
 				linkifyIssuesInTitles();
-				addOPLabels();
-				new MutationObserver(addOPLabels).observe(select('.new-discussion-timeline'), {childList: true, subtree: true});
+				observeEl('.new-discussion-timeline', addOPLabels, {childList: true, subtree: true});
 			}
 
 			if (pageDetect.isPRList() || pageDetect.isIssueList()) {
@@ -644,8 +638,7 @@ async function onDomReady() {
 			}
 
 			if (pageDetect.isPR() || pageDetect.isIssue() || pageDetect.isCommit()) {
-				addReactionParticipants.add(username);
-				addReactionParticipants.addListener(username);
+				addReactionParticipants();
 				showRealNames();
 			}
 
