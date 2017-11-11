@@ -1,7 +1,7 @@
 import select from 'select-dom';
 import {h} from 'dom-chef';
-import * as pageDetect from './page-detect';
-import {getUsername} from './utils';
+import * as pageDetect from '../libs/page-detect';
+import {getUsername} from '../libs/utils';
 
 export default () => {
 	let op;
@@ -31,8 +31,8 @@ export default () => {
 	`, newComments);
 
 	for (const placeholder of placeholders) {
-		placeholder.insertAdjacentElement('beforeBegin',
-			<span class="timeline-comment-label tooltipped tooltipped-multiline tooltipped-s" aria-label={tooltip}>
+		placeholder.before(
+			<span class="timeline-comment-label tooltipped tooltipped-multiline tooltipped-s rgh-tooltipped" aria-label={tooltip}>
 				Original&nbsp;Poster
 			</span>
 		);

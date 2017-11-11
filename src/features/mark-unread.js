@@ -1,9 +1,10 @@
 import gitHubInjection from 'github-injection';
 import select from 'select-dom';
 import {h} from 'dom-chef';
-import SynchronousStorage from './synchronous-storage';
-import * as icons from './icons';
-import * as pageDetect from './page-detect';
+import SynchronousStorage from '../libs/synchronous-storage';
+import * as icons from '../libs/icons';
+import * as pageDetect from '../libs/page-detect';
+import {getUsername} from '../libs/utils';
 
 let storage;
 
@@ -87,6 +88,7 @@ function markUnread() {
 }
 
 function renderNotifications() {
+	const myUserName = getUsername();
 	const unreadNotifications = storage.get()
 		.filter(notification => !isNotificationExist(notification.url))
 		.filter(notification => {
@@ -94,12 +96,7 @@ function renderNotifications() {
 				return true;
 			}
 
-			const {participants} = notification;
-			const myUserName = getUserName();
-
-			return participants
-				.filter(participant => participant.username === myUserName)
-				.length > 0;
+			return isParticipatingNotification(notification, myUserName);
 		});
 
 	if (unreadNotifications.length === 0) {
@@ -127,25 +124,25 @@ function renderNotifications() {
 
 		if (type === 'issue') {
 			if (state === 'open') {
-				icon = icons.openIssue;
+				icon = icons.openIssue();
 			}
 
 			if (state === 'closed') {
-				icon = icons.closedIssue;
+				icon = icons.closedIssue();
 			}
 		}
 
 		if (type === 'pull-request') {
 			if (state === 'open') {
-				icon = icons.openPullRequest;
+				icon = icons.openPullRequest();
 			}
 
 			if (state === 'merged') {
-				icon = icons.mergedPullRequest;
+				icon = icons.mergedPullRequest();
 			}
 
 			if (state === 'closed') {
-				icon = icons.closedPullRequest;
+				icon = icons.closedPullRequest();
 			}
 		}
 
@@ -154,8 +151,8 @@ function renderNotifications() {
 			const list = (
 				<div class="boxed-group flush">
 					<form class="boxed-group-action">
-						<button class="mark-all-as-read css-truncate tooltipped tooltipped-w js-mark-all-read" aria-label="Mark all notifications as read">
-							{icons.check}
+						<button class="mark-all-as-read css-truncate js-mark-all-read">
+							{icons.check()}
 						</button>
 					</form>
 
@@ -195,14 +192,14 @@ function renderNotifications() {
 
 				<ul class="notification-actions">
 					<li class="delete">
-						<button aria-label="Mark as read" class="btn-link delete-note tooltipped tooltipped-w js-mark-read">
-							{icons.check}
+						<button class="btn-link delete-note js-mark-read">
+							{icons.check()}
 						</button>
 					</li>
 
 					<li class="mute">
 						<button style={{opacity: 0, pointerEvents: 'none'}}>
-							{icons.mute}
+							{icons.mute()}
 						</button>
 					</li>
 
@@ -239,8 +236,12 @@ function isParticipatingPage() {
 	return /\/notifications\/participating/.test(location.pathname);
 }
 
-function getUserName() {
-	return select('#user-links a.name img').getAttribute('alt').slice(1);
+function isParticipatingNotification(notification, myUserName) {
+	const {participants} = notification;
+
+	return participants
+		.filter(participant => participant.username === myUserName)
+		.length > 0;
 }
 
 function updateUnreadIndicator() {
@@ -285,13 +286,13 @@ function addCustomAllReadBtn() {
 			<a href="#mark_as_read_confirm_box" class="btn btn-sm" rel="facebox">Mark all as read</a>
 
 			<div id="mark_as_read_confirm_box" style={{display: 'none'}}>
-					<h2 class="facebox-header" data-facebox-id="facebox-header">Are you sure?</h2>
+				<h2 class="facebox-header" data-facebox-id="facebox-header">Are you sure?</h2>
 
-					<p data-facebox-id="facebox-description">Are you sure you want to mark all unread notifications as read?</p>
+				<p data-facebox-id="facebox-description">Are you sure you want to mark all unread notifications as read?</p>
 
-					<div class="full-button">
-							<button id="clear-local-notification" class="btn btn-block">Mark all notifications as read</button>
-					</div>
+				<div class="full-button">
+					<button id="clear-local-notification" class="btn btn-block">Mark all notifications as read</button>
+				</div>
 			</div>
 		</div>
 	);
@@ -307,22 +308,21 @@ function updateLocalNotificationsCount() {
 	const githubNotificationsCount = Number(unreadCount.textContent);
 	const localNotifications = storage.get();
 
-	if (localNotifications) {
+	if (localNotifications.length > 0) {
 		unreadCount.textContent = githubNotificationsCount + localNotifications.length;
 	}
 }
 
-// Migrate old localStorage.unreadNotifications to new storage.
-// For extra safety, keep the old notifications under a different name.
-// Drop function in mid August and drop the new key as well.
-function migrateOldStorage() {
-	const oldStorage = localStorage.getItem('unreadNotifications');
-	if (oldStorage) {
-		const list = JSON.parse(oldStorage);
-		console.log('Migrating old unreadNotifications storage', list);
-		storage.set(list);
-		localStorage.setItem('_unreadNotifications_migrated', JSON.stringify(list));
-		localStorage.removeItem('unreadNotifications');
+function updateLocalParticipatingCount() {
+	const unreadCount = select('#notification-center .filter-list a[href="/notifications/participating"] .count');
+	const githubNotificationsCount = Number(unreadCount.textContent);
+	const myUserName = getUsername();
+
+	const participatingNotifications = storage.get()
+		.filter(notification => isParticipatingNotification(notification, myUserName));
+
+	if (participatingNotifications.length > 0) {
+		unreadCount.textContent = githubNotificationsCount + participatingNotifications.length;
 	}
 }
 
@@ -349,14 +349,19 @@ async function setup() {
 			});
 		}
 	);
-	migrateOldStorage();
-	gitHubInjection(window, () => {
+	gitHubInjection(() => {
 		destroy();
+
+		// Remove old data from previous storage
+		// Drop code in 2018
+		localStorage.removeItem('_unreadNotifications_migrated');
+		localStorage.removeItem('unreadNotifications');
 
 		if (pageDetect.isNotifications()) {
 			renderNotifications();
 			addCustomAllReadBtn();
 			updateLocalNotificationsCount();
+			updateLocalParticipatingCount();
 			$(document).on('click', '.js-mark-read', markNotificationRead);
 			$(document).on('click', '.js-mark-all-read', markAllNotificationsRead);
 			$(document).on('click', '.js-delete-notification button', updateUnreadIndicator);

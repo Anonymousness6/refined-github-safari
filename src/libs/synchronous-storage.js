@@ -10,7 +10,7 @@
 import SynchronousStorage from './synchronous-storage';
 
 const storage = await new SynchronousStorage(
-	() => browser.storage.local.get('name'),
+	() => localStorage.get('name'),
 	va => browser.storage.local.set({name: va})
 );
 

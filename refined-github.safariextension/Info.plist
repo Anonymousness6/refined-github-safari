@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Sindre Sorhus &amp; Mathieu Dutour</string>
 	<key>Builder Version</key>
-	<string>12604.1.29</string>
+	<string>13605.1.12</string>
 	<key>CFBundleDisplayName</key>
 	<string>Refined For Github</string>
 	<key>CFBundleIdentifier</key>
@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>17.7.21</string>
+	<string>17.11.11</string>
 	<key>CFBundleVersion</key>
-	<string>17.7.21</string>
+	<string>17.11.11</string>
 	<key>Chrome</key>
 	<dict>
 		<key>Database Quota</key>
@@ -27,7 +27,7 @@
 		<dict>
 			<key>Start</key>
 			<array>
-				<string>jquery-3.slim.min.js</string>
+				<string>jquery.slim.min.js</string>
 				<string>content.js</string>
 			</array>
 		</dict>
@@ -39,7 +39,7 @@
 	<key>Description</key>
 	<string>Simplifies the GitHub interface and adds useful features</string>
 	<key>DeveloperIdentifier</key>
-	<string>8SEPFSC7S3</string>
+	<string>0000000000</string>
 	<key>ExtensionInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>Permissions</key>

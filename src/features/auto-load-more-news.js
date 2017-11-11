@@ -1,6 +1,6 @@
 import select from 'select-dom';
 import debounce from 'debounce-fn';
-import {observeEl} from './utils';
+import {observeEl} from '../libs/utils';
 
 let btn;
 let newsfeedObserver;
@@ -16,32 +16,13 @@ const loadMore = debounce(() => {
 	}
 }, {wait: 200});
 
-// Delete after Firefox 55 goes stable
-// Also update applications.gecko.strict_min_version to 55.0 in manifest.json
-const IntersectionObserver = window.IntersectionObserver || class IntersectionObserverLocalfill {
-	maybeLoadMore() {
-		if (window.innerHeight > btn.getBoundingClientRect().top - 500) {
-			loadMore();
-		}
-	}
-	observe() {
-		window.addEventListener('scroll', this.maybeLoadMore);
-		window.addEventListener('resize', this.maybeLoadMore);
-		this.maybeLoadMore();
-	}
-	disconnect() {
-		window.removeEventListener('scroll', this.maybeLoadMore);
-		window.removeEventListener('resize', this.maybeLoadMore);
-	}
-};
-
-const inView = new IntersectionObserver(([{isIntersecting}]) => {
-	if (isIntersecting) {
-		loadMore();
-	}
-}, {
-	rootMargin: '500px' // https://github.com/sindresorhus/refined-github/pull/505#issuecomment-309273098
-});
+// const inView = new IntersectionObserver(([{isIntersecting}]) => {
+// 	if (isIntersecting) {
+// 		loadMore();
+// 	}
+// }, {
+// 	rootMargin: '500px' // https://github.com/sindresorhus/refined-github/pull/505#issuecomment-309273098
+// });
 
 const findButton = () => {
 	// If the old button is still there, leave
@@ -50,12 +31,12 @@ const findButton = () => {
 	}
 
 	// Forget the old button
-	inView.disconnect();
+	// inView.disconnect();
 
 	// Watch the new button, or stop everything
 	btn = select('.ajax-pagination-btn');
 	if (btn) {
-		inView.observe(btn);
+		// inView.observe(btn);
 	} else {
 		newsfeedObserver.disconnect();
 	}
@@ -68,6 +49,5 @@ export default () => {
 		// the fake click will submit the form without ajax.
 		form.addEventListener('submit', e => e.preventDefault());
 		newsfeedObserver = observeEl('#dashboard .news', findButton);
-		findButton();
 	}
 };

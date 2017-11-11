@@ -17,6 +17,12 @@
 	display: none !important;
 }
 
+/* Match the width of the account switcher modal to that of the user repo list */
+.dashboard-sidebar .select-menu-modal {
+	margin: 0;
+	width: 313px;
+}
+
 /* Remove the toolbar from the right repo box on the dashboard */
 .dashboard-sidebar .user-repos > h3,
 .dashboard-sidebar .user-repos > .boxed-group-action {
@@ -39,14 +45,29 @@
 }
 
 /* Remove news feed tips */
-.news > .text-center {
+.news > div:last-of-type.mt-4 {
 	display: none !important;
 }
 
-/* Remove tooltips */
-.tooltipped:not(.reaction-summary-item,.avatar-group-item,.avatar):before,
-.tooltipped:not(.reaction-summary-item,.avatar-group-item,.avatar):after {
+/* Remove tooltips where unnecessary */
+.tooltipped:before,
+.tooltipped:after {
 	display: none !important;
+}
+
+.notification-actions .tooltipped:before,
+.notification-actions .tooltipped:after,
+.reaction-summary-item:before,
+.reaction-summary-item:after,
+.avatar-group-item:before,
+.avatar-group-item:after,
+.js-zeroclipboard:before,
+.js-zeroclipboard:after,
+.rgh-tooltipped:before,
+.rgh-tooltipped:after,
+.avatar:before,
+.avatar:after {
+	display: inline-block !important;
 }
 
 /* Fade out the file icons */
@@ -65,15 +86,10 @@
 
 #readme .markdown-body {
 	border-radius: 3px !important;
-	border-radius: 3px !important;
 }
 
 .paginate-protip {
 	display: none !important;
-}
-
-.site-footer {
-	visibility: hidden;
 }
 
 /* Remove useless message on the right side of the PR merge box */
@@ -94,24 +110,16 @@
 .toolbar-group:last-child {
 	display: inline-block;
 }
-.toolbar-group .toolbar-item {
+.toolbar-group .toolbar-item:not(.js-saved-reply-container):not(.rgh-upload-btn) {
 	display: none;
-}
-.toolbar-group .js-saved-reply-container,
-.toolbar-group .refined-github-upload-btn {
-	display: block;
 }
 .toolbar-commenting {
 	margin-top: 4px;
 }
 
-.refined-github-upload-btn {
-	cursor: pointer;
-}
-
 /* Remove upload message on comment box */
-.write-content .drag-and-drop {
-	display: none !important;
+.is-default .drag-and-drop {
+	display: none;
 }
 .upload-enabled textarea {
 	border-bottom: 1px solid #ccc !important;
@@ -132,7 +140,7 @@
 }
 
 /* Move the dashboard organization switcher to the right column */
-.page-dashboard .news.column.two-thirds .account-switcher {
+.news.column.two-thirds .account-switcher {
 	/* Hide switcher from the main column, but if JS fails show it */
 	animation: temporarily-hide 5s steps(1, end);
 }
@@ -142,11 +150,11 @@
 		top: -1000px;
 	}
 }
-.page-dashboard .account-switcher button {
+.account-switcher button {
 	width: 100%;
 	margin-bottom: 15px;
 }
-.page-dashboard .account-switcher .select-menu-button-gravatar {
+.account-switcher .select-menu-button-gravatar {
 	float: none !important;
 	display: inline-block !important;
 	vertical-align: top !important;
@@ -191,11 +199,6 @@ a .commit-ref:hover span {
 	display: none !important;
 }
 
-/* Remove Upload files button; drag and drop is available anyway */
-.file-navigation a[href*="/upload/"] {
-	display: none !important;
-}
-
 /* Style for edit README button */
 #readme.blob #refined-github-readme-buttons {
 	display: none;
@@ -231,9 +234,6 @@ a .commit-ref:hover span {
 	top: 45px;
 	right: 30px;
 	padding: 10px 10px 0;
-}
-
-#refined-github-delete-fork-link a {
 	color: #df3e3e;
 }
 
@@ -243,10 +243,10 @@ deleted a branch
 added someone as a collaborator
 forked a repo
 */
-.news .alert.push,
+.news .push,
 .news .alert.delete.simple,
 .news .member_add,
-.news .alert.fork.simple {
+.news .fork {
 	display: none !important;
 }
 
@@ -359,28 +359,6 @@ we will add it back on for the simple news alerts we decide to show
 	height: 16px !important;
 }
 
-/* Hide current filename in PR header when not sticky (top of page) */
-.js-sticky-offset-scroll:not(.is-stuck) .diff-toolbar-filename {
-	display: none;
-}
-
-.js-sticky-offset-scroll.is-stuck .subset-files-tab,
-.js-sticky-offset-scroll.is-stuck .stale-files-tab {
-	width: 120%;
-	text-align: center;
-	margin-top: 5px;
-	margin-left: -11%;
-}
-
-.diff-toolbar-filename {
-	font-weight: bold;
-}
-
-.diff-toolbar-filename.filename-width-check {
-	visibility: hidden;
-	position: absolute;
-}
-
 /* Move new button to the right on single commit page */
 #toc .refined-github-toggle-whitespace {
 	float: right;
@@ -424,43 +402,38 @@ we will add it back on for the simple news alerts we decide to show
 	padding-right: 0 !important;
 }
 
-.reaction-summary-item a,
-.reaction-summary-item img {
-	display: inline-block;
+.reaction-summary-item {
+	--background: #FFF;
+}
+
+.reaction-summary-item.user-has-reacted {
+	--background: #f2f8fa;
 }
 
 .reaction-summary-item a {
+	display: inline-block;
+	vertical-align: middle;
+	width: 20px;
+	height: 20px;
+
+	background: #efefef; /* Placeholder before the images load */
+	box-shadow: 0 0 0 2px var(--background);
+	border-radius: 3px;
+
 	margin-left: -2px;
 	transition: margin-left 0.2s;
 }
 
-.reaction-summary-item img,
-.reaction-summary-item span {
-	width: 20px;
-	height: 20px;
-	vertical-align: middle;
-}
-
+/* This image will start at height:0 and will expand once loaded, covering the gray placeholder */
 .reaction-summary-item img {
-	color: #FFF; /* affects box-shadow */
-	box-shadow: 0 0 0 2px;
-	border-radius: 3px;
-}
-
-.reaction-summary-item.user-has-reacted img {
-	color: #f2f8fa;
+	max-width: 100%;
+	background-color: var(--background);
+	border-radius: inherit;
 }
 
 /* Overlap reaction avatars when there are 5+ types of reactions */
-.reaction-summary-item:first-child:nth-last-child(n+5):not(:hover) a:nth-child(n+2),
-.reaction-summary-item:first-child:nth-last-child(n+5) ~ *:not(:hover) a:nth-child(n+2) {
+.rgh-reactions-near-limit .reaction-summary-item:not(:hover) a:not(:first-of-type) {
 	margin-left: -12px;
-}
-
-/* Limit reaction avatars when there are 6 types of reactions */
-.reaction-summary-item:first-child:nth-last-child(6) a:nth-child(n+3),
-.reaction-summary-item:first-child:nth-last-child(6) ~ * a:nth-child(n+3) {
-	display: none;
 }
 
 /* Hide reaction popover text */
@@ -547,6 +520,11 @@ Hidden content area created to increase hover target
 	margin-top: 8px;
 }
 
+/* Change color of marker if there are only discussion marked as unread */
+.notification-indicator[data-ga-click$=":read"] .unread {
+	background: linear-gradient(#34d058, #28a745)
+}
+
 /* +/- Pseudo elements on diffs */
 .refined-github-diff-signs .blob-code-addition:before,
 .refined-github-diff-signs .blob-code-deletion:before {
@@ -584,10 +562,6 @@ Hidden content area created to increase hover target
 	display: none !important;
 }
 
-/* Fix for diffheader filename */
-.diffbar > .diffstat {
-	float: right;
-}
 
 /* Fix PR diffbar links position #474 */
 .stale-files-tab,
@@ -605,11 +579,6 @@ Hidden content area created to increase hover target
 .stale-files-tab-link:before {
 	content: 'Subset of changes. ';
 	font-weight: normal;
-}
-
-/* Copy button for gists margin */
-.gist-copy-btn {
-	margin: 0 10px 0 0;
 }
 
 /* Multiple comment labels margin */
@@ -674,31 +643,27 @@ a.tabnav-extra[href$="mastering-markdown/"] {
 }
 
 /* Hide marketplace navbar button */
-.header[role="banner"] [role="navigation"] a[href="/marketplace"] {
+.HeaderNavlink[href="/marketplace"] {
 	display: none !important;
 }
 
 /* Move labels in the Issue/PR list below the title */
 .js-issue-row .lh-condensed {
-	display: grid;
-	grid-template-rows: auto auto auto;
-	grid-template-columns: auto 1fr;
+	display: flex;
+	flex-wrap: wrap;
 }
 .js-issue-row .labels {
-	grid-area: 3;
-	padding-top: 4px;
-	grid-column-start: span 2;
+	order: 1;
 }
 .js-issue-row .h4, /* Title */
 .js-issue-row .d-inline-block.mr-1 {  /* Build status */
-	grid-area: 1;
 	padding-right: 4px; /* Space before the build status */
 }
 .js-issue-row .mt-1.text-small.text-gray { /* Issue details line */
-	grid-area: 2;
-	grid-column-start: span 2;
+	flex-basis: 100%;
 }
 .js-issue-row .label {
+	margin-top: 4px;
 	font-size: 11px !important;
 	padding: 2px 3px 3px 3px !important;
 }
@@ -706,4 +671,94 @@ a.tabnav-extra[href$="mastering-markdown/"] {
 /* Fix for GHE More Dropdown positioning */
 .reponav-dropdown.active .dropdown-menu {
 	left: auto !important;
+}
+
+/* Optically align Dependencies dropdown link*/
+.rgh-dependency-graph .octicon-package {
+	margin-left: -2px;
+	margin-right: 2px;
+}
+
+/* Hide PR/Issue rename events */
+.discussion-item-renamed {
+	display: none;
+}
+
+/* For `add-ci-link` */
+.rgh-ci-link {
+	position: relative;
+	top: -1em;
+	animation: fade-in 0.2s;
+}
+
+:root .repohead h1 .commit-build-statuses .octicon {
+	position: static;
+	color: inherit;
+}
+
+/* Sticky file headers on pull request diff view */
+.pull-request-tab-content .diff-view .file-header {
+	position: sticky;
+	top: 60px;
+	z-index: 10;
+}
+
+/* Sticky file headers in regular file view */
+.file .file-header {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+/* Remove annoying "helpful" banner on the issue tracker listing */
+.issues-listing .mb-4.js-notice {
+	display: none !important;
+}
+
+/* Remove annoying "helpful" popover on the repo label page */
+.labels-list .TutorialPopover {
+	display: none !important;
+}
+
+/* For the `add-time-machine-links-to-comments` feature */
+:root .rgh-timestamp-button {
+	padding: 0;
+}
+:root .rgh-timestamp-button .octicon {
+	vertical-align: middle;
+}
+
+/* Make the modal backdrop visible */
+:root body.menu-active .modal-backdrop,
+:root .dropdown-details[open] > summary::before {
+	background: rgba(0, 0, 0, 0.1);
+	z-index: 20;
+	animation: fade-in 0.2s;
+}
+:root .pagehead ul.pagehead-actions {
+	position: static; /* Demote watch/star/fork */
+}
+
+/* Reduce duplicate backdrop in PR diff view */
+:root .pr-toolbar .modal-backdrop {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+/* Fix subpixel rendering Chrome bug in tooltips' triangles */
+.tooltipped:hover::before,
+.tooltipped:hover::after,
+.tooltipped:active::before,
+.tooltipped:active::after,
+.tooltipped:focus::before,
+.tooltipped:focus::after {
+	animation-fill-mode: backwards !important;
+	opacity: 1;
 }

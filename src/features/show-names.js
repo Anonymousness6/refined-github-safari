@@ -1,11 +1,13 @@
+import {h} from 'dom-chef';
 import select from 'select-dom';
-import domify from './domify';
-import {getUsername, groupBy} from './utils';
+import domify from '../libs/domify';
+import {getUsername, groupBy} from '../libs/utils';
 
 const storageKey = 'cachedNames';
 
-const getCachedUsers = () => {
-	return new Promise(resolve => chrome.storage.local.get(storageKey, resolve));
+const getCachedUsers = async () => {
+	const cachedUsers = localStorage.getItem(storageKey);
+	return cachedUsers ? JSON.parse(cachedUsers): {};
 };
 
 const fetchName = async username => {
@@ -27,7 +29,7 @@ const fetchName = async username => {
 
 export default async () => {
 	const myUsername = getUsername();
-	const cache = (await getCachedUsers())[storageKey] || {};
+	const cache = await getCachedUsers();
 
 	// {sindresorhus: [a.author, a.author], otheruser: [a.author]}
 	const selector = `.js-discussion .author:not(.refined-github-fullname)`;
@@ -50,7 +52,7 @@ export default async () => {
 				// If it's a regular comment author, add it outside <strong>
 				// otherwise it's something like "User added some commits"
 				const insertionPoint = usernameEl.parentNode.tagName === 'STRONG' ? usernameEl.parentNode : usernameEl;
-				insertionPoint.insertAdjacentText('afterend', ` (${cache[username]}) `);
+				insertionPoint.after(' (', <bdo>{cache[username]}</bdo>, ') ');
 			}
 		}
 	};
@@ -60,5 +62,5 @@ export default async () => {
 	// Wait for all the fetches to be done
 	await Promise.all(fetches);
 
-	chrome.storage.local.set({[storageKey]: cache});
+	localStorage.setItem(storageKey, JSON.stringify(cache));
 };

@@ -1,51 +1,53 @@
 {
 	"scripts": {
-		"test": "xo && cross-env BABEL_ENV=testing ava && run-s build minify",
+		"test": "xo && cross-env BABEL_ENV=testing ava && run-s build:minified",
 		"build": "webpack",
+		"build:minified": "cross-env NODE_ENV=production webpack",
 		"watch": "webpack --watch",
 		"watch:sourcemap": "webpack --watch --devtool eval-cheap-module-source-map",
-		"minify": "cross-env BABEL_ENV=production babel --out-dir . refined-github.safariextension/content.js",
-		"release": "run-s build minify"
+		"release": "run-s build:minified"
 	},
 	"dependencies": {
-		"copy-text-to-clipboard": "^1.0.2",
+		"copy-text-to-clipboard": "^1.0.3",
 		"debounce-fn": "^1.0.0",
-		"dom-chef": "^1.3.0",
+		"dom-chef": "^3.0.0",
 		"dom-loaded": "^1.0.0",
-		"element-ready": "^2.0.0",
-		"github-injection": "^0.3.0",
+		"element-ready": "^2.2.0",
+		"github-injection": "^1.0.1",
+		"github-reserved-names": "^1.0.6",
+		"jquery": "^3.2.1",
 		"linkify-issues": "^1.3.0",
 		"linkify-urls": "^1.3.0",
+		"onetime": "^2.0.1",
 		"select-dom": "^4.1.0",
 		"shorten-repo-url": "^1.1.0",
 		"to-markdown": "^3.1.0",
 		"to-semver": "^1.1.0",
-		"webext-dynamic-content-scripts": "^2.0.1",
-		"webext-options-sync": "^0.11.0",
-		"webextension-polyfill": "^0.1.1"
+		"webext-dynamic-content-scripts": "github:bfred-it/webext-dynamic-content-scripts#debug",
+		"webext-options-sync": "^0.12.0",
+		"webextension-polyfill": "^0.2.1"
 	},
 	"devDependencies": {
 		"ava": "*",
-		"babel-cli": "^6.24.1",
-		"babel-core": "^6.25.0",
-		"babel-loader": "^7.1.1",
-		"babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
+		"babel-core": "^6.26.0",
+		"babel-loader": "^7.1.2",
+		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
 		"babel-plugin-transform-react-jsx": "^6.24.1",
-		"babel-preset-babili": "^0.1.4",
 		"chrome-webstore-upload-cli": "^1.0.0",
 		"common-tags": "^1.4.0",
-		"cross-env": "^5.0.1",
+		"copy-webpack-plugin": "^4.2.0",
+		"cross-env": "^5.0.5",
 		"dot-json": "^1.0.3",
-		"npm-run-all": "^4.0.2",
+		"npm-run-all": "^4.1.1",
+		"uglifyjs-webpack-plugin": "^1.0.0-beta.1",
 		"webext": "^1.9.1-with-submit.1",
-		"webpack": "^3.0.0",
+		"webpack": "^3.7.1",
 		"xo": "*"
 	},
 	"xo": {
 		"envs": [
 			"browser",
-			"jquery",
-			"webextensions"
+			"jquery"
 		],
 		"rules": {
 			"import/no-unassigned-import": 0,
@@ -58,6 +60,9 @@
 		},
 		"ignores": [
 			"refined-github.safariextension/**"
+		],
+		"globals": [
+			"browser"
 		]
 	},
 	"ava": {
@@ -85,22 +90,6 @@
 			"testing": {
 				"plugins": [
 					"transform-es2015-modules-commonjs"
-				]
-			},
-			"production": {
-				"minified": false,
-				"presets": [
-					[
-						"babili",
-						{
-							"deadcode": {
-								"optimizeRawSize": true
-							},
-							"mangle": false,
-							"removeConsole": false,
-							"simplify": false
-						}
-					]
 				]
 			}
 		}
