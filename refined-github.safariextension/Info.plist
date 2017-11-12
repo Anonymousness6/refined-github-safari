@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Sindre Sorhus &amp; Mathieu Dutour</string>
 	<key>Builder Version</key>
-	<string>13605.1.12</string>
+	<string>13604.3.5</string>
 	<key>CFBundleDisplayName</key>
 	<string>Refined For Github</string>
 	<key>CFBundleIdentifier</key>
@@ -39,7 +39,7 @@
 	<key>Description</key>
 	<string>Simplifies the GitHub interface and adds useful features</string>
 	<key>DeveloperIdentifier</key>
-	<string>0000000000</string>
+	<string>8SEPFSC7S3</string>
 	<key>ExtensionInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>Permissions</key>
